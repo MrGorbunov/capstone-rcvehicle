@@ -106,6 +106,12 @@ void movePivot() {
 
 void moveArcadeDrive() {
   double inputSpeed = sqrt(xInput * xInput + yInput * yInput) * speedCoef;
+  double speedReversalTerm = 1;
+  if (yInput < 0)
+    speedReversalTerm = -1; // this adds support for backwards driving
+
+  double rightSpeed = inputSpeed * speedReversalTerm;
+  double leftSpeed = -inputSpeed * speedReversalTerm;
 
   // If inputDirection is completey to the left or right,
   // the vehicle should still drive forward.
@@ -115,10 +121,7 @@ void moveArcadeDrive() {
   // As rotationAmount increases, rotSpeedDifference increases
   // because one motor is getting slower and slower.
   double rotationAmount = xInput * rotationCoef;
-  double rotSpeedDifference = rotationAmount * arcadeDriveMaxDiff;
-
-  double rightSpeed = inputSpeed;
-  double leftSpeed = -inputSpeed;
+  double rotSpeedDifference = abs(rotationAmount) * arcadeDriveMaxDiff; // Percentage, always positive
 
   // Counter clockwise
   if (rotationAmount < -rotationThreshold)
