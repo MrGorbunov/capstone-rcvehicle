@@ -49,9 +49,14 @@ team & only writing 1000 lines max.
 
 ### Robot Controller Bare Minimum
  1 Driving direction (Joystick)
+
  1 Forward & reverse
+ 
  1 Pickup Mechanism 
+
  2 Spinning in place (Button toggle for new driving mode)
+
  3 Camera angle changing
+
  4 Speed control - speed up & down
 
