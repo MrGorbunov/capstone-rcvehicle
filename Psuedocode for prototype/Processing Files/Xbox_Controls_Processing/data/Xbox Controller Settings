@@ -1,0 +1,8 @@
+Xbox Controller Settings 
+forwardreverse	Controls forward and reverse function	3	SLIDER	Y Axis	0	1.0	0.0
+leftright	Controls left and right function	3	SLIDER	X Axis	0	1.0	0.0
+pickup	Controls pickup mechanism	3	SLIDER	Z Axis	0	1.0	0.0
+leftcameraangle	Turns camera in a left angle	1	BUTTON	Button 2	0	0.0	0.0
+rightcameraangle	Turns camera in a right angle	1	BUTTON	Button 1	0	0.0	0.0
+increasespeed	Increase speed	1	BUTTON	Button 3	0	0.0	0.0
+decreasesoeed	Decrease speed	1	BUTTON	Button 0	0	0.0	0.0
