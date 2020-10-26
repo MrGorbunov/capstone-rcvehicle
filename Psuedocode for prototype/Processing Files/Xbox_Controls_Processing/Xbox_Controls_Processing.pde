@@ -20,7 +20,10 @@
   9. "8" - Move camera to the right
   10. "9" - Increase speed
   11. "a" - Decrease speed
+  
+  Note - I left Serial Command "4" last to make sure that it doesn't get triggered all the time
 */
+
 // Import statement for Serial Processing
 import processing.serial.*;
 
@@ -104,9 +107,6 @@ void draw ( ) {
   else if(leftRight < -0.1){
     myPort.write ( '3' ) ;
   }
-  else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
-    myPort.write ( '4' ) ;
-  }
   else if(pickup > 0.1){
     myPort.write ( '5' ) ;
   }
@@ -124,5 +124,8 @@ void draw ( ) {
   }
   else if(decreaseSpeedStatus){
     myPort.write ( 'a' ) ;
+  }
+  else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
+    myPort.write ( '4' ) ;
   }
 }
