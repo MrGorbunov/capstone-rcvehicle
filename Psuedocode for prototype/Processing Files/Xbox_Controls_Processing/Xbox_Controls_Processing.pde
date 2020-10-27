@@ -7,6 +7,8 @@
   3. RT/LT Value - Pickup 
   4. "X"/"B" Value - LeftCameraAngle/RightCameraAngle
   5. "Y"/"A" Value - IncreaseSpeed/DecreaseSpeed
+  6. LB/RB - Two Wheel Drive/Four Wheel Drive
+  7. The buttons underneath XBOX Logo(Left & Right) - Cruise control on/off
   
   Here is a directory of the Serial Inputs
   1. "0" - Go forward
@@ -20,6 +22,10 @@
   9. "8" - Move camera to the right
   10. "9" - Increase speed
   11. "a" - Decrease speed
+  12. "b" - Two Wheel Drive
+  13. "c" - Four Wheel Drive
+  14. "d" - Cruise Control On
+  15. "e" - Cruise Control Off
   
   Note - I left Serial Command "4" last to make sure that it doesn't get triggered all the time
 */
@@ -59,6 +65,9 @@ void setup ( ) {
   // Establishes the Serial Communication Connection
   myPort  =  new Serial (this, "COM3",  9600);
   myPort.bufferUntil ( '\n' );
+  
+  // Sets pinMode of Motors to OUTPUT
+  
 } 
 
 void draw ( ) {
@@ -67,6 +76,10 @@ void draw ( ) {
   ControlButton rightCameraAngle;
   ControlButton increaseSpeed;
   ControlButton decreaseSpeed;
+  ControlButton twoWheel;
+  ControlButton fourWheel;
+  ControlButton cruiseControlOn;
+  ControlButton cruiseControlOff;
   
   // The value of the controller joystick range from -1 to  1
   
@@ -94,6 +107,23 @@ void draw ( ) {
   // Read to see what the status of the "A" button on the Xbox Controller
   decreaseSpeed = cont.getButton("decreasespeed");
   boolean decreaseSpeedStatus = decreaseSpeed.pressed();
+  
+  // Read to see what the status of the LB button on the Xbox Controller
+  twoWheel = cont.getButton("TwoWheel");
+  boolean twoWheelStatus = twoWheel.pressed();
+  
+  // Read to see what the status of the RB button on the Xbox Controller
+  fourWheel = cont.getButton("FourWheel");
+  boolean fourWheelStatus = fourWheel.pressed();
+  
+  // Read to see what the status of the left button underneath Xbox Logo on the Xbox Controller
+  cruiseControlOn = cont.getButton("CruiseControlOn");
+  boolean cruiseControlOnStatus = cruiseControlOn.pressed();
+  
+  // Read to see what the status of the right button underneath Xbox Logo on the Xbox Controller
+  cruiseControlOff = cont.getButton("CruiseControlOff");
+  boolean cruiseControlOffStatus = cruiseControlOff.pressed();
+  
   
   if(forwardReverse > 0.1){
     myPort.write ( '0' ) ;
@@ -124,6 +154,18 @@ void draw ( ) {
   }
   else if(decreaseSpeedStatus){
     myPort.write ( 'a' ) ;
+  }
+  else if(twoWheelStatus){
+    myPort.write( 'b' );
+  }
+  else if(fourWheelStatus){
+    myPort.write( 'c' );
+  }
+  else if(cruiseControlOnStatus){
+    myPort.write( 'd' );
+  }
+  else if(cruiseControlOffStatus){
+    myPort.write( 'e' );
   }
   else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
     myPort.write ( '4' ) ;
