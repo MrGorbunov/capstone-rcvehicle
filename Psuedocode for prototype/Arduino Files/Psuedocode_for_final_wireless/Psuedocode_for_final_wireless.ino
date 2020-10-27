@@ -25,12 +25,24 @@
 */
 
 // RGB LED DP
-const int BLUERGBLEDDP = 3;
+const int BLUERGBLEDDP = 4;
 const int GREENRGBLEDDP = 5;
 const int REDRGBLEDDP = 6;
 
 // RGB LED Method Forward Declaration
 void changeRGBLEDColor(int, int, int);
+
+// Rear Motors DP
+const int LEFTREARMOTORINPUTONE = 9;
+const int LEFTREARMOTORINPUTTWO = 10;
+const int RIGHTREARMOTORINPUTONE = 11;
+const int RIGHTREARMOTORINPUTTWO =  12;
+
+// Front Motor DP
+const int FRONTMOTOR = 13;
+
+// Configuration Motor Methods Forward Declaration
+void configureMotors(int, int, int);
 
 void setup() {
   // Enables Data Transfer at 9600
@@ -40,6 +52,13 @@ void setup() {
   pinMode(BLUERGBLEDDP, OUTPUT);
   pinMode(GREENRGBLEDDP, OUTPUT);
   pinMode(REDRGBLEDDP, OUTPUT);
+
+  // Sets the Motor DP to OUTPUT
+  pinMode(LEFTREARMOTORINPUTONE, OUTPUT);
+  pinMode(LEFTREARMOTORINPUTTWO, OUTPUT);
+  pinMode(RIGHTREARMOTORINPUTONE, OUTPUT);
+  pinMode(RIGHTREARMOTORINPUTTWO, OUTPUT);
+  pinMode(FRONTMOTOR, OUTPUT);
 }
 
 void loop() {
@@ -48,15 +67,19 @@ void loop() {
     char state = Serial.read();
     if(state == '0'){
       changeRGBLEDColor(0, 255, 0);
+      configureMotors(driveStyle, 0, joystickValue);
     }
     else if(state == '1'){
       changeRGBLEDColor(255, 0, 0);
+      configureMotors(driveStyle, 1, joystickValue);
     }
     else if(state == '2'){
       changeRGBLEDColor(125, 125, 0);
+      configureMotors(driveStyle, 2, joystickValue);
     }
     else if(state == '3'){
       changeRGBLEDColor(0, 125, 125);
+      configureMotors(driveStyle, 3, joystickValue);
     }
     else if(state == '5'){
       changeRGBLEDColor(255, 255, 0);
@@ -78,12 +101,99 @@ void loop() {
     }
     else if(state == '4'){
       changeRGBLEDColor(0, 0, 0);
+      configureMotors(2, 0, joystickValue);
     }
   }
 }
 
+// Void method for changing RGB LED color
 void changeRGBLEDColor(int redVal, int greenVal, int blueVal){
   analogWrite(BLUERGBLEDDP, blueVal);
   analogWrite(GREENRGBLEDDP, greenVal);
   analogWrite(REDRGBLEDDP, redVal);
+}
+/*
+  Void method for configuring the motors 
+
+  Directory of Drive Style
+    1. When 0, it activates Two Wheel Drive
+    2. When 1, it activate Four Wheel Drive
+    3. When >= 2, it activates Neutral Drive 
+
+  Directory of Drive Direction
+    1. When 0, motors go in a forward motion
+    2. When 1, motors go in a reverse motion
+    3. When 2, motors go in a left motion
+    4. When >= 3, motrs go in a right motion
+*/
+void configureMotors(int driveStyle, int driveDirection, int joystickSpeed){
+  // This calculate the speed at which the motors need to run
+  int finalSpeed = abs(joystickSpeed * 255)
+  
+  if(driveStyle  == 0){
+    // Ensures that the front motor is off
+    analogWrite(FRONTMOTOR,0);
+    
+    if(driveDirection == 0){
+      analogWrite(LEFTREARMOTORINPUTONE,finalSpeed);
+      analogWrite(LEFTREARMOTORINPUTTWO,0);
+      analogWrite(RIGHTREARMOTORINPUTONE,finalSpeed);
+      analogWrite(RIGHTREARMOTORINPUTTWO,0);
+    }
+    else if(driveDirection == 1){
+      analogWrite(LEFTREARMOTORINPUTONE,0);
+      analogWrite(LEFTREARMOTORINPUTTWO,finalSpeed);
+      analogWrite(RIGHTREARMOTORINPUTONE,0);
+      analogWrite(RIGHTREARMOTORINPUTTWO,finalSpeed);
+    }
+    else if(driveDirection == 2){
+      analogWrite(LEFTREARMOTORINPUTONE,finalSpeed);
+      analogWrite(LEFTREARMOTORINPUTTWO,0);
+      analogWrite(RIGHTREARMOTORINPUTONE,0);
+      analogWrite(RIGHTREARMOTORINPUTTWO,0);
+    }
+    else {
+      analogWrite(LEFTREARMOTORINPUTONE,0);
+      analogWrite(LEFTREARMOTORINPUTTWO,0);
+      analogWrite(RIGHTREARMOTORINPUTONE, finalSpeed);
+      analogWrite(RIGHTREARMOTORINPUTTWO,0);
+    }
+  }
+  else if(driveStyle == 1){
+    if(driveDirection == 0){
+      analogWrite(LEFTREARMOTORINPUTONE,finalSpeed);
+      analogWrite(LEFTREARMOTORINPUTTWO,0);
+      analogWrite(RIGHTREARMOTORINPUTONE,finalSpeed);
+      analogWrite(RIGHTREARMOTORINPUTTWO,0);
+      analogWrite(FRONTMOTOR, finalSpeed);
+    }
+    else if(driveDirection == 1){
+      analogWrite(LEFTREARMOTORINPUTONE,0);
+      analogWrite(LEFTREARMOTORINPUTTWO,finalSpeed);
+      analogWrite(RIGHTREARMOTORINPUTONE,0);
+      analogWrite(RIGHTREARMOTORINPUTTWO,finalSpeed);
+      analogWrite(FRONTMOTOR,0);
+    }
+    else if(driveDirection == 2){
+      analogWrite(LEFTREARMOTORINPUTONE,finalSpeed);
+      analogWrite(LEFTREARMOTORINPUTTWO,0);
+      analogWrite(RIGHTREARMOTORINPUTONE,0);
+      analogWrite(RIGHTREARMOTORINPUTTWO,0);
+      analogWrite(FRONTMOTOR,0);
+    }
+    else {
+      analogWrite(LEFTREARMOTORINPUTONE,0);
+      analogWrite(LEFTREARMOTORINPUTTWO,0);
+      analogWrite(RIGHTREARMOTORINPUTONE, finalSpeed);
+      analogWrite(RIGHTREARMOTORINPUTTWO,0);
+      analogWrite(FRONTMOTOR,0);
+    }
+  }
+  else{
+    analogWrite(LEFTREARMOTORINPUTONE,0);
+    analogWrite(LEFTREARMOTORINPUTTWO,0);
+    analogWrite(RIGHTREARMOTORINPUTONE,0);
+    analogWrite(RIGHTREARMOTORINPUTTWO,0);
+    analogWrite(FRONTMOTOR,0);
+  }
 }
