@@ -1,12 +1,14 @@
 /*
   This code is going to be used to convert the serial signals to output by the Arduino
-
+  
   Here is a directory of the commands 
   1. Left Joystick Y Value - Forward/Reverse
   2. Left Joystick X Value - Left/Right
   3. RT/LT Value - Pickup 
   4. "X"/"B" Value - LeftCameraAngle/RightCameraAngle
   5. "Y"/"A" Value - IncreaseSpeed/DecreaseSpeed
+  6. LB/RB - Two Wheel Drive/Four Wheel Drive
+  7. The buttons underneath XBOX Logo(Left & Right) - Cruise control on/off
   
   Here is a directory of the Serial Inputs
   1. "0" - Go forward
@@ -20,212 +22,214 @@
   9. "8" - Move camera to the right
   10. "9" - Increase speed
   11. "a" - Decrease speed
+  12. "b" - Two Wheel Drive
+  13. "c" - Four Wheel Drive
+  14. "d" - Cruise Control On
+  15. "e" - Cruise Control Off
 
   Note - I left Serial Command "4" last to make sure that it doesn't get triggered all the time
 */
 
-// RGB LED needs 3 pins
-const int PIN_RGBLED_BLUE = 4;
-const int PIN_RGBLED_GREEN = 5;
-const int PIN_RGBLED_RED = 6;
+// RGB LED DP
+const int BLUERGBLEDDP = 4;
+const int GREENRGBLEDDP = 5;
+const int REDRGBLEDDP = 6;
 
+// RGB LED Method Forward Declaration
 void changeRGBLEDColor(int, int, int);
 
-// Motors pins
-const int PIN_LEFTREARMOTORINPUTONE = 9;
-const int PIN_LEFTREARMOTORINPUTTWO = 10;
-const int PIN_RIGHTREARMOTORINPUTONE = 11;
-const int PIN_RIGHTREARMOTORINPUTTWO =  12;
-const int PIN_FRONTMOTOR = 13;
+// Rear Motors DP
+const int LEFTREARMOTORINPUTONE = 9;
+const int LEFTREARMOTORINPUTTWO = 10;
+const int RIGHTREARMOTORINPUTONE = 11;
+const int RIGHTREARMOTORINPUTTWO =  12;
 
-void actuateMotors(int, int, int);
+// Front Motor DP
+const int FRONTMOTOR = 13;
 
+// Configuration Motor Methods Forward Declaration
+void configureMotors(int, int, int, bool);
 
-
-//
-// Control flow
-//
+// Global status variables
+int motorSpeed = 127.5;
+int driveStyle = 0;
+bool cruiseControl = false;
 
 void setup() {
   // Enables Data Transfer at 9600
   Serial.begin(9600);
   
   // Sets the RGB LED DP to OUTPUT
-  pinMode(PIN_RGBLED_BLUE, OUTPUT);
-  pinMode(PIN_RGBLED_GREEN, OUTPUT);
-  pinMode(PIN_RGBLED_RED, OUTPUT);
+  pinMode(BLUERGBLEDDP, OUTPUT);
+  pinMode(GREENRGBLEDDP, OUTPUT);
+  pinMode(REDRGBLEDDP, OUTPUT);
 
   // Sets the Motor DP to OUTPUT
-  pinMode(PIN_LEFTREARMOTORINPUTONE, OUTPUT);
-  pinMode(PIN_LEFTREARMOTORINPUTTWO, OUTPUT);
-  pinMode(PIN_RIGHTREARMOTORINPUTONE, OUTPUT);
-  pinMode(PIN_RIGHTREARMOTORINPUTTWO, OUTPUT);
-  pinMode(PIN_FRONTMOTOR, OUTPUT);
+  pinMode(LEFTREARMOTORINPUTONE, OUTPUT);
+  pinMode(LEFTREARMOTORINPUTTWO, OUTPUT);
+  pinMode(RIGHTREARMOTORINPUTONE, OUTPUT);
+  pinMode(RIGHTREARMOTORINPUTTWO, OUTPUT);
+  pinMode(FRONTMOTOR, OUTPUT);
 }
 
 void loop() {
   if (Serial.available ( ) > 0) {
     // Sets a variable to the signal from Processing
     char state = Serial.read();
+    
     if(state == '0'){
-      changeRGBLEDColor(0, 255, 0);
-      actuateMotors(driveStyle, 0, joystickValue);
+      configureMotors(driveStyle, 0, motorSpeed, cruiseControl);
     }
     else if(state == '1'){
-      changeRGBLEDColor(255, 0, 0);
-      actuateMotors(driveStyle, 1, joystickValue);
+      configureMotors(driveStyle, 1, motorSpeed, cruiseControl);
     }
     else if(state == '2'){
-      changeRGBLEDColor(125, 125, 0);
-      actuateMotors(driveStyle, 2, joystickValue);
+      configureMotors(driveStyle, 2, motorSpeed, cruiseControl);
     }
     else if(state == '3'){
-      changeRGBLEDColor(0, 125, 125);
-      actuateMotors(driveStyle, 3, joystickValue);
+      configureMotors(driveStyle, 3, motorSpeed, cruiseControl);
     }
     else if(state == '5'){
-      changeRGBLEDColor(255, 255, 0);
     }
     else if(state == '6'){
-      changeRGBLEDColor(0, 255, 255);
     }
     else if(state == '7'){
-      changeRGBLEDColor(100, 125, 125);
     }
     else if(state == '8'){
-      changeRGBLEDColor(125, 125, 100);
     }
     else if(state == '9'){
-      changeRGBLEDColor(125, 100, 100);
+      if(motorSpeed => 0){
+        motorSpeed -= 5
+      }
+      else if(motorSpeed =< 0){
+        motorSpeed = 0;
+      }
     }
     else if(state == 'a'){
-      changeRGBLEDColor(100, 100, 125);
+      if(motorSpeed =< 255){
+        motorSpeed -= 5
+      }
+      else if(motorSpeed => 255){
+        motorSpeed = 255;
+      }
+    }
+    else if(state == 'b'){
+      driveStyle = 0;
+    }
+    else if(state == 'c'){
+      driveStyle = 1;
+    }
+    else if(state == 'd'){
+      cruiseControl = true;
+    }
+    else if(state == 'e'){
+      cruiseControl = false;
     }
     else if(state == '4'){
-      changeRGBLEDColor(0, 0, 0);
-      actuateMotors(2, 0, joystickValue);
+      configureMotors(2, 0, joystickValue);
     }
   }
 }
-
-
-
-//
-// LED
-//
 
 // Void method for changing RGB LED color
 void changeRGBLEDColor(int redVal, int greenVal, int blueVal){
-  analogWrite(PIN_RGBLED_BLUE, blueVal);
-  analogWrite(PIN_RGBLED_GREEN, greenVal);
-  analogWrite(PIN_RGBLED_RED, redVal);
+  analogWrite(BLUERGBLEDDP, blueVal);
+  analogWrite(GREENRGBLEDDP, greenVal);
+  analogWrite(REDRGBLEDDP, redVal);
 }
-
-
-
-//
-// Motor Methods
-//
-
 /*
-  Void method for actuating the motors
+  Void method for configuring the motors 
 
-  Drive Style
-    0 => Two Wheel Drive
-    1 => Four Wheel Drive
-    2 => Neutral Drive 
+  Directory of Drive Style
+    1. When 0, it activates Two Wheel Drive
+    2. When 1, it activate Four Wheel Drive
+    3. When >= 2, it activates Neutral Drive 
 
-  Drive Direction
-    0 => go forward
-    1 => go reverse
-    2 => go left
-    3 => go right
+  Directory of Drive Direction
+    1. When 0, motors go in a forward motion
+    2. When 1, motors go in a reverse motion
+    3. When 2, motors go in a left motion
+    4. When >= 3, motrs go in a right motion
 
-  driveSpeed
-    Must be on range [-255, 255]
-    Determines the speed of driving
+   Note - When cruise control is on, the robot continues to follow in the direction it was before without Joystick Input
 */
-void actuateMotors(int driveStyle, int driveDirection, int driveSpeed){
-  // Signage of speed is controlled by driveDirection
-  int finalSpeed = abs(driveSpeed)
+void configureMotors(int driveStyle, int driveDirection, int joystickSpeed, bool cruiseControl){
+  // This calculate the speed at which the motors need to run
+  int finalSpeed = abs(joystickSpeed * 255)
   
-  if(driveStyle  == 0){
-    actuateTwoWheelDrive(driveDiretion, finalSpeed);
-  }
-  else if(driveStyle == 1){
-    actuateFourWheelDrive(driveDirection, finalSpeed);
+  if(!cruiseControl){
+    if(driveStyle  == 0){
+      // Ensures that the front motor is off
+      analogWrite(FRONTMOTOR,0);
+      
+      if(driveDirection == 0){
+        analogWrite(LEFTREARMOTORINPUTONE,finalSpeed);
+        analogWrite(LEFTREARMOTORINPUTTWO,0);
+        analogWrite(RIGHTREARMOTORINPUTONE,finalSpeed);
+        analogWrite(RIGHTREARMOTORINPUTTWO,0);
+      }
+      else if(driveDirection == 1){
+        analogWrite(LEFTREARMOTORINPUTONE,0);
+        analogWrite(LEFTREARMOTORINPUTTWO,finalSpeed);
+        analogWrite(RIGHTREARMOTORINPUTONE,0);
+        analogWrite(RIGHTREARMOTORINPUTTWO,finalSpeed);
+      }
+      else if(driveDirection == 2){
+        analogWrite(LEFTREARMOTORINPUTONE,finalSpeed);
+        analogWrite(LEFTREARMOTORINPUTTWO,0);
+        analogWrite(RIGHTREARMOTORINPUTONE,0);
+        analogWrite(RIGHTREARMOTORINPUTTWO,0);
+      }
+      else {
+        analogWrite(LEFTREARMOTORINPUTONE,0);
+        analogWrite(LEFTREARMOTORINPUTTWO,0);
+        analogWrite(RIGHTREARMOTORINPUTONE, finalSpeed);
+        analogWrite(RIGHTREARMOTORINPUTTWO,0);
+      }
+    }
+    else if(driveStyle == 1){
+      if(driveDirection == 0){
+        analogWrite(LEFTREARMOTORINPUTONE,finalSpeed);
+        analogWrite(LEFTREARMOTORINPUTTWO,0);
+        analogWrite(RIGHTREARMOTORINPUTONE,finalSpeed);
+        analogWrite(RIGHTREARMOTORINPUTTWO,0);
+        analogWrite(FRONTMOTOR, finalSpeed);
+      }
+      else if(driveDirection == 1){
+        analogWrite(LEFTREARMOTORINPUTONE,0);
+        analogWrite(LEFTREARMOTORINPUTTWO,finalSpeed);
+        analogWrite(RIGHTREARMOTORINPUTONE,0);
+        analogWrite(RIGHTREARMOTORINPUTTWO,finalSpeed);
+        analogWrite(FRONTMOTOR,0);
+      }
+      else if(driveDirection == 2){
+        analogWrite(LEFTREARMOTORINPUTONE,finalSpeed);
+        analogWrite(LEFTREARMOTORINPUTTWO,0);
+        analogWrite(RIGHTREARMOTORINPUTONE,0);
+        analogWrite(RIGHTREARMOTORINPUTTWO,0);
+        analogWrite(FRONTMOTOR,0);
+      }
+      else {
+        analogWrite(LEFTREARMOTORINPUTONE,0);
+        analogWrite(LEFTREARMOTORINPUTTWO,0);
+        analogWrite(RIGHTREARMOTORINPUTONE, finalSpeed);
+        analogWrite(RIGHTREARMOTORINPUTTWO,0);
+        analogWrite(FRONTMOTOR,0);
+      }
+    }
+    else{
+      analogWrite(LEFTREARMOTORINPUTONE,0);
+      analogWrite(LEFTREARMOTORINPUTTWO,0);
+      analogWrite(RIGHTREARMOTORINPUTONE,0);
+      analogWrite(RIGHTREARMOTORINPUTTWO,0);
+      analogWrite(FRONTMOTOR,0);
+    }
   }
   else{
-    actuateNeutralDrive(driveDirection);
+      analogWrite(LEFTREARMOTORINPUTONE,finalSpeed);
+      analogWrite(LEFTREARMOTORINPUTTWO,0);
+      analogWrite(RIGHTREARMOTORINPUTONE,finalSpeed);
+      analogWrite(RIGHTREARMOTORINPUTTWO,0);
+      analogWrite(FRONTMOTOR, finalSpeed);
   }
 }
-
-void actuateTwoWheelDrive (int driveDirection, int speed) {
-  // Ensures that the front motor is off
-  analogWrite(PIN_FRONTMOTOR,0);
-  
-  if(driveDirection == 0){
-    analogWrite(PIN_LEFTREARMOTORINPUTONE,speed);
-    analogWrite(PIN_LEFTREARMOTORINPUTTWO,0);
-    analogWrite(PIN_RIGHTREARMOTORINPUTONE,speed);
-    analogWrite(PIN_RIGHTREARMOTORINPUTTWO,0);
-  }
-  else if(driveDirection == 1){
-    analogWrite(PIN_LEFTREARMOTORINPUTONE,0);
-    analogWrite(PIN_LEFTREARMOTORINPUTTWO,speed);
-    analogWrite(PIN_RIGHTREARMOTORINPUTONE,0);
-    analogWrite(PIN_RIGHTREARMOTORINPUTTWO,speed);
-  }
-  else if(driveDirection == 2){
-    analogWrite(PIN_LEFTREARMOTORINPUTONE,speed);
-    analogWrite(PIN_LEFTREARMOTORINPUTTWO,0);
-    analogWrite(PIN_RIGHTREARMOTORINPUTONE,0);
-    analogWrite(PIN_RIGHTREARMOTORINPUTTWO,0);
-  }
-  else {
-    analogWrite(PIN_LEFTREARMOTORINPUTONE,0);
-    analogWrite(PIN_LEFTREARMOTORINPUTTWO,0);
-    analogWrite(PIN_RIGHTREARMOTORINPUTONE,speed);
-    analogWrite(PIN_RIGHTREARMOTORINPUTTWO,0);
-  }
-}
-
-void actuateFourWheelDrive (int driveDirection, int speed) {
-  if(driveDirection == 0){
-    analogWrite(PIN_LEFTREARMOTORINPUTONE,speed);
-    analogWrite(PIN_LEFTREARMOTORINPUTTWO,0);
-    analogWrite(PIN_RIGHTREARMOTORINPUTONE,speed);
-    analogWrite(PIN_RIGHTREARMOTORINPUTTWO,0);
-    analogWrite(PIN_FRONTMOTOR, finalSpeed);
-  }
-  else if(driveDirection == 1){
-    analogWrite(PIN_LEFTREARMOTORINPUTONE,0);
-    analogWrite(PIN_LEFTREARMOTORINPUTTWO,speed);
-    analogWrite(PIN_RIGHTREARMOTORINPUTONE,0);
-    analogWrite(PIN_RIGHTREARMOTORINPUTTWO,speed);
-    analogWrite(PIN_FRONTMOTOR,0);
-  }
-  else if(driveDirection == 2){
-    analogWrite(PIN_LEFTREARMOTORINPUTONE,speed);
-    analogWrite(PIN_LEFTREARMOTORINPUTTWO,0);
-    analogWrite(PIN_RIGHTREARMOTORINPUTONE,0);
-    analogWrite(PIN_RIGHTREARMOTORINPUTTWO,0);
-    analogWrite(PIN_FRONTMOTOR,0);
-  }
-  else {
-    analogWrite(PIN_LEFTREARMOTORINPUTONE,0);
-    analogWrite(PIN_LEFTREARMOTORINPUTTWO,0);
-    analogWrite(PIN_RIGHTREARMOTORINPUTONE, speed);
-    analogWrite(PIN_RIGHTREARMOTORINPUTTWO,0);
-    analogWrite(PIN_FRONTMOTOR,0);
-  }
-}
-
-void actuateNeutralDrive (int driveDirection) {
-  analogWrite(PIN_LEFTREARMOTORINPUTONE,0);
-  analogWrite(PIN_LEFTREARMOTORINPUTTWO,0);
-  analogWrite(PIN_RIGHTREARMOTORINPUTONE,0);
-  analogWrite(PIN_RIGHTREARMOTORINPUTTWO,0);
-  analogWrite(PIN_FRONTMOTOR,0);
-}
-
