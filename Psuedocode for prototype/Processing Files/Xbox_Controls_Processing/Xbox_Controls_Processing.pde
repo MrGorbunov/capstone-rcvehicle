@@ -30,34 +30,48 @@
   Note - I left Serial Command "4" last to make sure that it doesn't get triggered all the time
 */
 
-// Import Statment for GUI Control
-import controlP5.*;
-
-// Import statement for Serial Processing
+// Import Statements for Serial Processing
 import processing.serial.*;
+
+// Import Statements for Arduino Compiling and Example Software 
+import cc.arduino.*;
+import org.firmata.*;
 
 // Import Statements for Gaming Inputs
 import net.java.games.input.*;
 import org.gamecontrolplus.*;
 import org.gamecontrolplus.gui.*;
 
-// Import Statements for Arduino Compiling and Example Software 
-import cc.arduino.*;
-import org.firmata.*;
+// Import Statements for GUI Control
+import controlP5.*;
+
+// Import Statements for Sounds
+import processing.sound.*;
+
+// Serial Communication Variable
+Serial myPort;
 
 // Game controller variables
 ControlDevice cont;
 ControlIO control;
 
-// Serial Communication Variable
-Serial myPort;
-
 // GUI Control Variables
 ControlP5 cp5;
 Accordion accordion;
 
+// Sound Control Variables
+public final SoundFile BOOTUP = new SoundFile(this, "BOOTUPSOUND.mp3");
+public final SoundFile GOINGFORWARD = new SoundFile(this, "GOINGFORWARD.mp3");
+public final SoundFile GOINGBACKWARDS = new SoundFile(this, "GOINGBACKWARDS.mp3");
+public final SoundFile TURNINGLEFT = new SoundFile(this, "TURNLEFT.mp3");
+public final SoundFile TURNINGRIGHT = new SoundFile(this, "TURNRIGHT.mp3");
+public final SoundFile NEUTRALMODE = new SoundFile(this, "NEUTRALMODE.mp3");
+
 // Speed Variable(used later for GUI only)
 float currentMotorSpeed = 128; 
+
+// Current Drive Mode Variable(Used for sound processing)
+int driverMode = 5;
 
 void setup ( ) {
   // Instantiates the controller 
@@ -78,6 +92,12 @@ void setup ( ) {
   
   // Sets the canvas size for the color GUI
   size (500,  500);
+  
+  // Sets up the intial GUI
+  gui(0, 0, 0, 0);
+  
+  // Plays boot up noice
+  BOOTUP.play();
 } 
 
 // Control the GUI Configuration
@@ -125,15 +145,15 @@ void gui(float forwardReverse, float leftRight, float pickup, float currentMotor
     .setValue(currentMotorSpeed)
     .moveTo(g3)
     ;
-
-  // create a new accordion
-  // add g1, g2, and g3 to the accordion.
+  
+  // Allows Menu to Be Collapsed
   accordion = cp5.addAccordion("acc")
                  .setPosition(94,125)
                  .setWidth(300)
                  .addItem(g3)
                  ;
                  
+  // Some GUI Code(I copied form online)              
   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.open(0,1,2);}}, 'o');
   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.close(0,1,2);}}, 'c');
   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.setWidth(300);}}, '1');
@@ -142,15 +162,9 @@ void gui(float forwardReverse, float leftRight, float pickup, float currentMotor
   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.setCollapseMode(ControlP5.SINGLE);}}, '4');
   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {cp5.remove("myGroup1");}}, '0');
   
+  // Allows one section to be open at a time
   accordion.open(0,1,2);
-  
-  // use Accordion.MULTI to allow multiple group 
-  // to be open at a time.
-  accordion.setCollapseMode(Accordion.MULTI);
-  
-  // when in SINGLE mode, only 1 accordion  
-  // group can be open at a time.  
-  // accordion.setCollapseMode(Accordion.SINGLE);
+  accordion.setCollapseMode(Accordion.SINGLE);
 }
 
 void draw ( ) {
@@ -217,14 +231,30 @@ void draw ( ) {
   
   if(forwardReverse > 0.1 && abs(leftRight) < abs(forwardReverse)){  
     myPort.write ( '0' ) ;
+    if(driverMode != 0){
+      GOINGFORWARD.play();
+      driverMode = 0;
+    }
   }
   else if(forwardReverse < -0.1 && abs(leftRight) < abs(forwardReverse)){
+    if(driverMode != 1){
+      GOINGBACKWARDS.play();
+      driverMode = 1;
+    }
     myPort.write ( '1' ) ;
   }
   else if(leftRight > 0.1 && abs(leftRight) > abs(forwardReverse)){
+    if(driverMode != 2){
+      TURNINGRIGHT.play();
+      driverMode = 2;
+    }
     myPort.write ( '2' ) ;
   }
   else if(leftRight < -0.1 && abs(leftRight) > abs(forwardReverse)){
+    if(driverMode != 3){
+      TURNINGLEFT.play();
+      driverMode = 3;
+    }
     myPort.write ( '3' ) ;
   }
   else if(pickup > 0.1){
@@ -280,6 +310,10 @@ void draw ( ) {
     myPort.write( 'e' );
   }
   else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
+    if(driverMode != 4){
+      NEUTRALMODE.play();
+      driverMode = 4;
+    }
     myPort.write ( '4' ) ;
   }
 }
