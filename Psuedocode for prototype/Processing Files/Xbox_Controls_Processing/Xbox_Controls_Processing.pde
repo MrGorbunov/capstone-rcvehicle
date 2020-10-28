@@ -124,13 +124,14 @@ void draw ( ) {
   cruiseControlOff = cont.getButton("CruiseControlOff");
   boolean cruiseControlOffStatus = cruiseControlOff.pressed();
   
+  // The background() method has the following parameters(Green, Red, Blue);
   
   if(forwardReverse > 0.1){  
-    background (0, 255, 0);
+    background (255, 0, 0);
     myPort.write ( '0' ) ;
   }
   else if(forwardReverse < -0.1){
-    background (255, 0, 0);
+    background (0, 255, 0);
     myPort.write ( '1' ) ;
   }
   else if(leftRight > 0.1){
