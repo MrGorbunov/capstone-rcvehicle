@@ -30,6 +30,9 @@
   Note - I left Serial Command "4" last to make sure that it doesn't get triggered all the time
 */
 
+// Import Statment for GUI Control
+import controlP5.*;
+
 // Import statement for Serial Processing
 import processing.serial.*;
 
@@ -48,6 +51,13 @@ ControlIO control;
 
 // Serial Communication Variable
 Serial myPort;
+
+// GUI Control Variables
+ControlP5 cp5;
+Accordion accordion;
+
+// Speed Variable(used later for GUI only)
+float currentMotorSpeed = 128; 
 
 void setup ( ) {
   // Instantiates the controller 
@@ -70,7 +80,85 @@ void setup ( ) {
   size (500,  500);
 } 
 
+// Control the GUI Configuration
+void gui(float forwardReverse, float leftRight, float pickup, float currentMotorSpeed) {
+  cp5 = new ControlP5(this);
+
+  // group number 3, contains a bang and a slider
+  Group g3 = cp5.addGroup("Controller Information")
+                .setBackgroundColor(color(0, 64))
+                .setBackgroundHeight(150)
+                ;
+  
+  // Shows the value of the Y - Axis| Forward and Reverse Directiom
+  cp5.addSlider("Forward and Reverse")
+     .setPosition(60,20)
+     .setSize(100,20)
+     .setRange(-1,1)
+     .setValue(forwardReverse)
+     .moveTo(g3)
+     ;
+  
+  // Shows the value of the X-Axis| Left and Right Direction
+  cp5.addSlider("Left and Right")
+     .setPosition(60,50)
+     .setSize(100,20)
+     .setRange(-1, 1)
+     .setValue(leftRight)
+     .moveTo(g3)
+     ;
+   
+  // Shows the value of the LT/RT| Pickup Servo Level
+  cp5.addSlider("Pickup")
+    .setPosition(60,80)
+    .setSize(100, 20)
+    .setRange(-1, 1)
+    .setValue(pickup)
+    .moveTo(g3)
+    ;
+  
+  // Shows the value of the LT/RT| Pickup Servo Level
+  cp5.addSlider("Motor Speed")
+    .setPosition(60,110)
+    .setSize(100, 20)
+    .setRange(0, 1)
+    .setValue(currentMotorSpeed)
+    .moveTo(g3)
+    ;
+
+  // create a new accordion
+  // add g1, g2, and g3 to the accordion.
+  accordion = cp5.addAccordion("acc")
+                 .setPosition(94,125)
+                 .setWidth(300)
+                 .addItem(g3)
+                 ;
+                 
+  cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.open(0,1,2);}}, 'o');
+  cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.close(0,1,2);}}, 'c');
+  cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.setWidth(300);}}, '1');
+  cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.setPosition(0,0);accordion.setItemHeight(190);}}, '2'); 
+  cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.setCollapseMode(ControlP5.ALL);}}, '3');
+  cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.setCollapseMode(ControlP5.SINGLE);}}, '4');
+  cp5.mapKeyFor(new ControlKey() {public void keyEvent() {cp5.remove("myGroup1");}}, '0');
+  
+  accordion.open(0,1,2);
+  
+  // use Accordion.MULTI to allow multiple group 
+  // to be open at a time.
+  accordion.setCollapseMode(Accordion.MULTI);
+  
+  // when in SINGLE mode, only 1 accordion  
+  // group can be open at a time.  
+  // accordion.setCollapseMode(Accordion.SINGLE);
+}
+
 void draw ( ) {
+  // The background() method has the following parameters(Green, Red, Blue);
+  
+  // Resets Background
+  background(186, 252, 3);
+  
   // Defines the button variables for checking status
   ControlButton leftCameraAngle;
   ControlButton rightCameraAngle;
@@ -124,66 +212,74 @@ void draw ( ) {
   cruiseControlOff = cont.getButton("CruiseControlOff");
   boolean cruiseControlOffStatus = cruiseControlOff.pressed();
   
-  // The background() method has the following parameters(Green, Red, Blue);
+  // Updates the GUI
+  gui(forwardReverse*-1, leftRight *-1, pickup*-1, currentMotorSpeed/255);
   
-  if(forwardReverse > 0.1){  
-    background (255, 0, 0);
+  if(forwardReverse > 0.1 && abs(leftRight) < abs(forwardReverse)){  
     myPort.write ( '0' ) ;
   }
-  else if(forwardReverse < -0.1){
-    background (0, 255, 0);
+  else if(forwardReverse < -0.1 && abs(leftRight) < abs(forwardReverse)){
     myPort.write ( '1' ) ;
   }
-  else if(leftRight > 0.1){
-    background (100, 125, 125);
+  else if(leftRight > 0.1 && abs(leftRight) > abs(forwardReverse)){
     myPort.write ( '2' ) ;
   }
-  else if(leftRight < -0.1){
-    background (125, 125, 100);
+  else if(leftRight < -0.1 && abs(leftRight) > abs(forwardReverse)){
     myPort.write ( '3' ) ;
   }
   else if(pickup > 0.1){
-    background (255, 255, 0);
     myPort.write ( '5' ) ;
   }
   else if(pickup < -0.1){
-    background (0, 255, 255);
     myPort.write ( '6' ) ;
   }
   else if(leftCameraAngleStatus){
-    background (100, 100, 100);
+    background (200, 200, 100);
     myPort.write ( '7' ) ;
   }
   else if(rightCameraAngleStatus){
-    background (100, 100, 100);
+    background (100, 200, 200);
     myPort.write ( '8' ) ;
   }
   else if(increaseSpeedStatus){
-    background (200, 200, 0);
+    if(currentMotorSpeed <= 255){
+      currentMotorSpeed += 5;
+    }
+    else if(currentMotorSpeed >= 255){
+      currentMotorSpeed = 255;
+    }
     myPort.write ( '9' ) ;
   }
   else if(decreaseSpeedStatus){
-    background (200, 0, 200);
+    if(currentMotorSpeed >= 0){
+      currentMotorSpeed -= 5;
+    }
+    else if(currentMotorSpeed <= 0){
+      currentMotorSpeed = 0;
+    }
     myPort.write ( 'a' ) ;
   }
   else if(twoWheelStatus){
     background (125, 125, 125);
+    delay(750);
     myPort.write( 'b' );
   }
   else if(fourWheelStatus){
     background (150, 150, 150);
+    delay(750);
     myPort.write( 'c' );
   }
   else if(cruiseControlOnStatus){
-    background (225, 225, 225);
+    background (225, 225, 0);
+    delay(750);
     myPort.write( 'd' );
   }
   else if(cruiseControlOffStatus){
-    background (225, 225, 225);
+    background (225, 0, 225);
+    delay(750);
     myPort.write( 'e' );
   }
   else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
-    background (125, 100, 125);
     myPort.write ( '4' ) ;
   }
 }
