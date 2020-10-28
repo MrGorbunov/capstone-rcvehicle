@@ -131,12 +131,6 @@ void loop() {
   }
 }
 
-// Void method for changing RGB LED color
-void changeRGBLEDColor(int redVal, int greenVal, int blueVal){
-  analogWrite(BLUERGBLEDDP, blueVal);
-  analogWrite(GREENRGBLEDDP, greenVal);
-  analogWrite(REDRGBLEDDP, redVal);
-}
 /*
   Void method for configuring the motors 
 
