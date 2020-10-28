@@ -98,18 +98,18 @@ void loop() {
     else if(state == '8'){
     }
     else if(state == '9'){
-      if(motorSpeed => 0){
-        motorSpeed -= 5
+      if(motorSpeed >= 0){
+        motorSpeed -= 5;
       }
-      else if(motorSpeed =< 0){
+      else if(motorSpeed <= 0){
         motorSpeed = 0;
       }
     }
     else if(state == 'a'){
-      if(motorSpeed =< 255){
-        motorSpeed -= 5
+      if(motorSpeed <= 255){
+        motorSpeed -= 5;
       }
-      else if(motorSpeed => 255){
+      else if(motorSpeed >= 255){
         motorSpeed = 255;
       }
     }
@@ -126,7 +126,7 @@ void loop() {
       cruiseControl = false;
     }
     else if(state == '4'){
-      configureMotors(2, 0, joystickValue);
+      configureMotors(2, 0, motorSpeed, cruiseControl);
     }
   }
 }
@@ -149,7 +149,7 @@ void loop() {
 */
 void configureMotors(int driveStyle, int driveDirection, int joystickSpeed, bool cruiseControl){
   // This calculate the speed at which the motors need to run
-  int finalSpeed = abs(joystickSpeed * 255)
+  int finalSpeed = abs(joystickSpeed * 255);
   
   if(!cruiseControl){
     if(driveStyle  == 0){
