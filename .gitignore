@@ -1,3 +1,4 @@
 .vscode
 commit-message.txt
+*.autosave
 *.swp
