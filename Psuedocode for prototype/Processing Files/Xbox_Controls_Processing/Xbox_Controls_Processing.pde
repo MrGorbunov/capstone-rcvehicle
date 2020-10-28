@@ -66,8 +66,8 @@ void setup ( ) {
   myPort  =  new Serial (this, "COM3",  9600);
   myPort.bufferUntil ( '\n' );
   
-  // Sets pinMode of Motors to OUTPUT
-  
+  // Sets the canvas size for the color GUI
+  size (500,  500);
 } 
 
 void draw ( ) {
@@ -125,49 +125,64 @@ void draw ( ) {
   boolean cruiseControlOffStatus = cruiseControlOff.pressed();
   
   
-  if(forwardReverse > 0.1){
+  if(forwardReverse > 0.1){  
+    background (0, 255, 0);
     myPort.write ( '0' ) ;
   }
   else if(forwardReverse < -0.1){
+    background (255, 0, 0);
     myPort.write ( '1' ) ;
   }
   else if(leftRight > 0.1){
+    background (100, 125, 125);
     myPort.write ( '2' ) ;
   }
   else if(leftRight < -0.1){
+    background (125, 125, 100);
     myPort.write ( '3' ) ;
   }
   else if(pickup > 0.1){
+    background (255, 255, 0);
     myPort.write ( '5' ) ;
   }
   else if(pickup < -0.1){
+    background (0, 255, 255);
     myPort.write ( '6' ) ;
   }
   else if(leftCameraAngleStatus){
+    background (100, 100, 100);
     myPort.write ( '7' ) ;
   }
   else if(rightCameraAngleStatus){
+    background (100, 100, 100);
     myPort.write ( '8' ) ;
   }
   else if(increaseSpeedStatus){
+    background (200, 200, 0);
     myPort.write ( '9' ) ;
   }
   else if(decreaseSpeedStatus){
+    background (200, 0, 200);
     myPort.write ( 'a' ) ;
   }
   else if(twoWheelStatus){
+    background (125, 125, 125);
     myPort.write( 'b' );
   }
   else if(fourWheelStatus){
+    background (150, 150, 150);
     myPort.write( 'c' );
   }
   else if(cruiseControlOnStatus){
+    background (225, 225, 225);
     myPort.write( 'd' );
   }
   else if(cruiseControlOffStatus){
+    background (225, 225, 225);
     myPort.write( 'e' );
   }
   else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
+    background (125, 100, 125);
     myPort.write ( '4' ) ;
   }
 }
