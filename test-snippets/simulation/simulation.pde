@@ -10,10 +10,9 @@ Also, as of now this assuems 4 wheels with 2 wheel drive.
 
 
 //
-// Classes 
+// Utility Functions & Classes
 // - Transform & ChildTransform are for simpler position keeping
-// - Rect makes drawing much simpler
-// - VehicleComponent combines a rect and a transform
+// - drawRect(transform) will draw a rectangle
 //
 
 class Transform {
@@ -37,12 +36,21 @@ class Transform {
   public float getX() { return x; }
   public float getY() { return y; }
   
-  public void rotateSelf(float deltaRot) {
+  public void rotate(float deltaRot) {
     rotation += deltaRot;
     rotation %= 360;
   }
   public void moveOnX(float deltaX) { this.x += deltaX; }
   public void moveOnY(float deltaY) { this.y += deltaY; }
+
+  public void moveLocalX(float deltaX) {
+    this.y += deltaX * sin(rotation);
+    this.x += deltaX * cos(rotation);
+  }
+  public void moveLocalY(float deltaY) {
+    this.y += deltaY * cos(rotation);
+    this.x += -deltaY * sin(rotation);
+  }
   
   public void setAngle(float rotation) { this.rotation = rotation % 360; }
   public void setX(float x) { this.x = x; }
@@ -78,21 +86,26 @@ class ChildTransform extends Transform {
   }
 }
 
-//
-// Rect
 
-public class ShapeRect {
-  float w, h;
 
-  public ShapeRect(float width, float height) {
-    w = width;
-    h = height;
-  }
+public void drawRect(Transform transform, float w, float h) {
+  pushMatrix();
+  translate(transform.getX(), transform.getY());
+  rotate(transform.getAngle()); // radian conversion
+  rect(-w/2, -h/2, w, h);
+  popMatrix();
+}
 
-  public void drawSelf(Transform trans) {
-    float[] center = new float[] {trans.getX(), trans.getY()};
-    return;
-  }
+public void drawArrow(Transform transform, float arrowLength) {
+  drawArrow(transform.getX(), transform.getY(), transform.getAngle(), arrowLength);
+}
+
+public void drawArrow(float x, float y, float angle, float arrowLength) {
+  float x2 = x - arrowLength * sin(angle);
+  float y2 = y + arrowLength * cos(angle);
+
+  circle(x, y, 3);
+  line(x, y, x2, y2);
 }
 
 
@@ -103,36 +116,49 @@ public class ShapeRect {
 // Flow
 //
 
-float rotation = 0;
+Transform center = new Transform(200, 200);
+
+float carWidth = 40;
+float carHeight = 80;
+float tireWidth = 10;
+float tireHeight = 20;
+
+Transform[] children = new ChildTransform[] {
+  new ChildTransform(center, 0, -10),   // Camera
+
+  new ChildTransform(center, -carWidth/2 - tireWidth/2, -carHeight/2 + tireHeight/2),
+  new ChildTransform(center, -carWidth/2 - tireWidth/2, carHeight/2 - tireHeight/2),
+  new ChildTransform(center, carWidth/2 + tireWidth/2, -carHeight/2 + tireHeight/2),
+  new ChildTransform(center, carWidth/2 + tireWidth/2, carHeight/2 - tireHeight/2),
+};
 
 void setup () {
   size(500, 500);
   
+  stroke(150);
+  strokeWeight(2);
+  frameRate(30);
 }
 
 void draw () {
   background(255);
-  stroke(50);
-  strokeWeight(7);
+  stroke(80);
 
-  Transform parent = new Transform(50, 50);
-  Transform[] children = new ChildTransform[] {
-    new ChildTransform(parent, -10, -30),
-    new ChildTransform(parent, -10, 30),
-    new ChildTransform(parent, 10, -30),
-    new ChildTransform(parent, 10, 30),
-  };
-  
-  parent.rotateSelf(rotation);
-  rotation += 0.01;
+  drawRect(center, carWidth, carHeight);
 
+  drawRect(children[1], tireWidth, tireHeight);
+  drawRect(children[2], tireWidth, tireHeight);
+  drawRect(children[3], tireWidth, tireHeight);
+  drawRect(children[4], tireWidth, tireHeight);
 
-  point(parent.getX(), parent.getY());
-  stroke(150);
-  strokeWeight(4);
-  for (Transform child : children) {
-    point(child.getX(), child.getY());
-  }
+  drawArrow(center, 10);
+
+  center.rotate(0.1);
+  center.moveLocalY(3);
 }
+
+
+
+
 
 
