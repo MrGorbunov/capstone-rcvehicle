@@ -196,6 +196,12 @@ void draw ( ) {
   
   // Reads the value of the Y-Axis on the Xbox Controller
   float forwardReverse = cont.getSlider("forwardreverse").getValue();
+  byte[] byteForwardReverse = {};
+  for(int i = 0; i < Float. toString(forwardReverse).length(); i++){
+    char convertedCharValue = Float.toString(forwardReverse).charAt(i);
+    byte convertedByteValue = (byte) convertedCharValue;
+    byteForwardReverse[i] = convertedByteValue;
+  }
   
   // Reads the value of the X-Axis on the Xbox Controller
   float leftRight = cont.getSlider("leftright").getValue();
