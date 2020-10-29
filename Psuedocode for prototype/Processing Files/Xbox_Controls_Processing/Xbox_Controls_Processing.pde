@@ -193,8 +193,6 @@ void draw ( ) {
   ControlButton cruiseControlOff;
   
   // The value of the controller joystick range from -1 to  1
-  cont.rumble(1);
- 
   
   // Reads the value of the Y-Axis on the Xbox Controller
   float forwardReverse = cont.getSlider("forwardreverse").getValue();
@@ -244,12 +242,14 @@ void draw ( ) {
     myPort.write ( '0' ) ;
     if(driverMode != 0){
       GOINGFORWARD.play();
+      delay(500);
       driverMode = 0;
     }
   }
   else if(forwardReverse < -0.1 && abs(leftRight) < abs(forwardReverse)){
     if(driverMode != 1){
       GOINGBACKWARDS.play();
+      delay(500);
       driverMode = 1;
     }
     myPort.write ( '1' ) ;
@@ -257,6 +257,7 @@ void draw ( ) {
   else if(leftRight > 0.1 && abs(leftRight) > abs(forwardReverse)){
     if(driverMode != 2){
       TURNINGRIGHT.play();
+      delay(500);
       driverMode = 2;
     }
     myPort.write ( '2' ) ;
@@ -323,6 +324,7 @@ void draw ( ) {
   else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
     if(driverMode != 4){
       NEUTRALMODE.play();
+      delay(500);
       driverMode = 4;
     }
     myPort.write ( '4' ) ;
