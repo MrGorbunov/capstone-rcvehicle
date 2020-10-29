@@ -60,12 +60,12 @@ ControlP5 cp5;
 Accordion accordion;
 
 // Sound Control Variables
-public final SoundFile BOOTUP = new SoundFile(this, "BOOTUPSOUND.mp3");
-public final SoundFile GOINGFORWARD = new SoundFile(this, "GOINGFORWARD.mp3");
-public final SoundFile GOINGBACKWARDS = new SoundFile(this, "GOINGBACKWARDS.mp3");
-public final SoundFile TURNINGLEFT = new SoundFile(this, "TURNLEFT.mp3");
-public final SoundFile TURNINGRIGHT = new SoundFile(this, "TURNRIGHT.mp3");
-public final SoundFile NEUTRALMODE = new SoundFile(this, "NEUTRALMODE.mp3");
+SoundFile BOOTUP;
+SoundFile GOINGFORWARD;
+SoundFile GOINGBACKWARDS;
+SoundFile TURNINGLEFT;
+SoundFile TURNINGRIGHT;
+SoundFile NEUTRALMODE;
 
 // Speed Variable(used later for GUI only)
 float currentMotorSpeed = 128; 
@@ -93,11 +93,20 @@ void setup ( ) {
   // Sets the canvas size for the color GUI
   size (500,  500);
   
+  // Sets up the audio files
+  BOOTUP = new SoundFile(this, "BOOTUPSOUND.wav");
+  GOINGFORWARD = new SoundFile(this, "GOINGFORWARD.wav");
+  GOINGBACKWARDS = new SoundFile(this, "GOINGBACKWARDS.wav");
+  TURNINGLEFT = new SoundFile(this, "TURNLEFT.wav");
+  TURNINGRIGHT = new SoundFile(this, "TURNRIGHT.wav");
+  NEUTRALMODE = new SoundFile(this, "NEUTRALMODE.wav");
+  
   // Sets up the intial GUI
   gui(0, 0, 0, 0);
   
   // Plays boot up noice
   BOOTUP.play();
+  delay(3000);
 } 
 
 // Control the GUI Configuration
@@ -184,6 +193,8 @@ void draw ( ) {
   ControlButton cruiseControlOff;
   
   // The value of the controller joystick range from -1 to  1
+  cont.rumble(1);
+ 
   
   // Reads the value of the Y-Axis on the Xbox Controller
   float forwardReverse = cont.getSlider("forwardreverse").getValue();
