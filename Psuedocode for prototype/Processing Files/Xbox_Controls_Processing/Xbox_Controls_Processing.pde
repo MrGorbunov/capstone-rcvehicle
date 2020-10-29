@@ -55,6 +55,16 @@ Serial myPort;
 ControlDevice cont;
 ControlIO control;
 
+// Controller Button Variables
+ControlButton leftCameraAngle;
+ControlButton rightCameraAngle;
+ControlButton increaseSpeed;
+ControlButton decreaseSpeed;
+ControlButton twoWheel;
+ControlButton fourWheel;
+ControlButton cruiseControlOn;
+ControlButton cruiseControlOff;
+
 // GUI Control Variables
 ControlP5 cp5;
 Accordion accordion;
@@ -66,6 +76,11 @@ SoundFile GOINGBACKWARDS;
 SoundFile TURNINGLEFT;
 SoundFile TURNINGRIGHT;
 SoundFile NEUTRALMODE;
+
+// For boosted cycles, these byte array have become global variables
+byte[] byteForwardReverse = {0, 1, 2, 3, 4, 5};
+byte[] byteLeftRight = {0, 1, 2, 3, 4, 5};
+byte[] bytePickup = {0, 1, 2, 3, 4, 5};
 
 // Speed Variable(used later for GUI only)
 float currentMotorSpeed = 128; 
@@ -182,32 +197,46 @@ void draw ( ) {
   // Resets Background
   background(186, 252, 3);
   
-  // Defines the button variables for checking status
-  ControlButton leftCameraAngle;
-  ControlButton rightCameraAngle;
-  ControlButton increaseSpeed;
-  ControlButton decreaseSpeed;
-  ControlButton twoWheel;
-  ControlButton fourWheel;
-  ControlButton cruiseControlOn;
-  ControlButton cruiseControlOff;
-  
   // The value of the controller joystick range from -1 to  1
   
   // Reads the value of the Y-Axis on the Xbox Controller
   float forwardReverse = cont.getSlider("forwardreverse").getValue();
-  byte[] byteForwardReverse = {};
-  for(int i = 0; i < Float. toString(forwardReverse).length(); i++){
-    char convertedCharValue = Float.toString(forwardReverse).charAt(i);
-    byte convertedByteValue = (byte) convertedCharValue;
-    byteForwardReverse[i] = convertedByteValue;
-  }
   
+  // Converts float value to byte array for Serial Communication
+  for(int i = 0; i < 6; i++){
+    try {
+      byteForwardReverse[i] = (byte) Float.toString(forwardReverse).charAt(i);
+    }
+    catch(Exception e){
+      break;
+    }
+  }
+
   // Reads the value of the X-Axis on the Xbox Controller
   float leftRight = cont.getSlider("leftright").getValue();
   
+  // Converts float value to byte array for Serial Communication
+  for(int i = 0; i < 6; i++){
+    try {
+      byteLeftRight[i] = (byte) Float.toString(leftRight).charAt(i);
+    }
+    catch(Exception e){
+      break;
+    }
+  }
+  
   // Read the value of the Z-Acis(RT/LT) on the Xbox Controller
   float pickup = cont.getSlider("pickup").getValue();
+  
+  // Converts float value to byte array for Serial Communication
+  for(int i = 0; i < 6; i++){
+    try {
+      bytePickup[i] = (byte) Float.toString(pickup).charAt(i);
+    }
+    catch(Exception e){
+      break;
+    }
+  }
   
   // Read to see what the status of the "X" button on the Xbox Controller
   leftCameraAngle = cont.getButton("leftcameraangle");
@@ -244,36 +273,38 @@ void draw ( ) {
   // Updates the GUI
   gui(forwardReverse*-1, leftRight *-1, pickup*-1, currentMotorSpeed/255);
   
+  // Sends Forward Reverse Value to Arduino
+  myPort.write(byteForwardReverse);
+  
+  // Sends Left Right Value to Arduino
+  myPort.write(byteLeftRight);
+  
+  // Sends Pickup Value to Arduino
+  myPort.write(bytePickup);
+  
   if(forwardReverse > 0.1 && abs(leftRight) < abs(forwardReverse)){  
-    myPort.write ( '0' ) ;
     if(driverMode != 0){
       GOINGFORWARD.play();
-      delay(500);
       driverMode = 0;
     }
   }
   else if(forwardReverse < -0.1 && abs(leftRight) < abs(forwardReverse)){
     if(driverMode != 1){
       GOINGBACKWARDS.play();
-      delay(500);
       driverMode = 1;
     }
-    myPort.write ( '1' ) ;
   }
   else if(leftRight > 0.1 && abs(leftRight) > abs(forwardReverse)){
     if(driverMode != 2){
       TURNINGRIGHT.play();
-      delay(500);
       driverMode = 2;
     }
-    myPort.write ( '2' ) ;
   }
   else if(leftRight < -0.1 && abs(leftRight) > abs(forwardReverse)){
     if(driverMode != 3){
       TURNINGLEFT.play();
       driverMode = 3;
     }
-    myPort.write ( '3' ) ;
   }
   else if(pickup > 0.1){
     myPort.write ( '5' ) ;
@@ -309,30 +340,25 @@ void draw ( ) {
   }
   else if(twoWheelStatus){
     background (125, 125, 125);
-    delay(750);
     myPort.write( 'b' );
   }
   else if(fourWheelStatus){
     background (150, 150, 150);
-    delay(750);
     myPort.write( 'c' );
   }
   else if(cruiseControlOnStatus){
     background (225, 225, 0);
-    delay(750);
     myPort.write( 'd' );
   }
   else if(cruiseControlOffStatus){
     background (225, 0, 225);
-    delay(750);
     myPort.write( 'e' );
   }
   else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
     if(driverMode != 4){
       NEUTRALMODE.play();
-      delay(500);
       driverMode = 4;
     }
-    myPort.write ( '4' ) ;
   }
+  println("Cycle Completed");
 }
