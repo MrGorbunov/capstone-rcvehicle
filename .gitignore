@@ -1,4 +1,6 @@
 .vscode
+*.autosave
 
+# .swp for vim, commit-message.txt is on Michael's machine
 commit-message.txt
 *.swp

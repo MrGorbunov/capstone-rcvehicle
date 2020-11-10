@@ -1,0 +1,6 @@
+import processing.serial.*;
+Serial myPort;
+
+void setup () {
+  
+}
