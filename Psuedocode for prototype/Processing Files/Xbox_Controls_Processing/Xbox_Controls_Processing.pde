@@ -48,8 +48,12 @@ import controlP5.*;
 // Import Statements for Sounds
 import processing.sound.*;
 
+// Networking Import Statement
+import hypermedia.net.*;
+
 // Import Statement for Java Arrays
 import java.util.Arrays;
+import java.nio.ByteBuffer;
 
 // Serial Communication Variable
 Serial myPort;
@@ -85,6 +89,19 @@ float currentMotorSpeed = 128;
 
 // Current Drive Mode Variable(Used for sound processing)
 int driverMode = 5;
+
+// Controller Value Holder Global Form
+float forwardReverse;
+float leftRight;
+float pickup;
+boolean leftCameraAngleStatus;
+boolean rightCameraAngleStatus;
+boolean increaseSpeedStatus;
+boolean decreaseSpeedStatus;
+boolean twoWheelStatus;
+boolean fourWheelStatus;
+boolean cruiseControlOnStatus;
+boolean cruiseControlOffStatus;
 
 void setup ( ) {
   // Instantiates the controller 
@@ -198,45 +215,45 @@ void draw ( ) {
   // The value of the controller joystick range from -1 to  1
   
   // Reads the value of the Y-Axis on the Xbox Controller
-  float forwardReverse = cont.getSlider("forwardreverse").getValue();
+  forwardReverse = cont.getSlider("YAxis").getValue();
 
   // Reads the value of the X-Axis on the Xbox Controller
-  float leftRight = cont.getSlider("leftright").getValue();
+  leftRight = cont.getSlider("XAxis").getValue();
   
-  // Read the value of the Z-Acis(RT/LT) on the Xbox Controller
-  float pickup = cont.getSlider("pickup").getValue();
+  // Read the value of the Z-Axis(RT/LT) on the Xbox Controller
+  pickup = cont.getSlider("ZAxis").getValue();
   
   // Read to see what the status of the "X" button on the Xbox Controller
-  leftCameraAngle = cont.getButton("leftcameraangle");
-  boolean leftCameraAngleStatus = leftCameraAngle.pressed();
+  leftCameraAngle = cont.getButton("XButton");
+  leftCameraAngleStatus = leftCameraAngle.pressed();
   
   // Read to see what the status of the "B" button on the Xbox Controller
-  rightCameraAngle = cont.getButton("rightcameraangle");
-  boolean rightCameraAngleStatus = rightCameraAngle.pressed();
+  rightCameraAngle = cont.getButton("BButton");
+  rightCameraAngleStatus = rightCameraAngle.pressed();
   
   // Read to see what the status of the "Y" button on the Xbox Controller
-  increaseSpeed = cont.getButton("increasespeed");
-  boolean increaseSpeedStatus = increaseSpeed.pressed();
+  increaseSpeed = cont.getButton("YButton");
+  increaseSpeedStatus = increaseSpeed.pressed();
   
   // Read to see what the status of the "A" button on the Xbox Controller
-  decreaseSpeed = cont.getButton("decreasespeed");
-  boolean decreaseSpeedStatus = decreaseSpeed.pressed();
+  decreaseSpeed = cont.getButton("AButton");
+  decreaseSpeedStatus = decreaseSpeed.pressed();
   
   // Read to see what the status of the LB button on the Xbox Controller
-  twoWheel = cont.getButton("TwoWheel");
-  boolean twoWheelStatus = twoWheel.pressed();
+  twoWheel = cont.getButton("LBButton");
+  twoWheelStatus = twoWheel.pressed();
   
   // Read to see what the status of the RB button on the Xbox Controller
-  fourWheel = cont.getButton("FourWheel");
-  boolean fourWheelStatus = fourWheel.pressed();
+  fourWheel = cont.getButton("RBButton");
+  fourWheelStatus = fourWheel.pressed();
   
   // Read to see what the status of the left button underneath Xbox Logo on the Xbox Controller
-  cruiseControlOn = cont.getButton("CruiseControlOn");
-  boolean cruiseControlOnStatus = cruiseControlOn.pressed();
+  cruiseControlOn = cont.getButton("leftButtonUnderneathXboxLogo");
+  cruiseControlOnStatus = cruiseControlOn.pressed();
   
   // Read to see what the status of the right button underneath Xbox Logo on the Xbox Controller
-  cruiseControlOff = cont.getButton("CruiseControlOff");
-  boolean cruiseControlOffStatus = cruiseControlOff.pressed();
+  cruiseControlOff = cont.getButton("rightButtonUnderneathXboxLogo");
+  cruiseControlOffStatus = cruiseControlOff.pressed();
   
   // Updates the GUI
   gui(forwardReverse*-1, leftRight *-1, pickup*-1, currentMotorSpeed/255);
