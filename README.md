@@ -3,6 +3,29 @@
 This is the code base (Arduino sketches) for the Capstone
 RC project.
 
+## Final Design Specs
+
+### Packet Design
+The libraries allow us to easily send over byte arrays over a UDP protocol. Specically, we can safely send 23 byte packets 50 times a second. 
+
+These packets contain motor speeds, and because we only have to send data for 5 motors, all speeds can fit on one packet (1-2 bytes per motor). The packets being sent over the network look like this:
+
+[Motor-Left, Motor-Right, Shovel-Servo, Shovel-Servo, Vision-Pan, Vision-Pan, Vision-Tilt, Vision-Tilt, ...]
+
+-- or --
+
+byte index  |  motor
+--------------------
+0 & 1 | Drive-left
+2 & 3 | Drive-right
+4 & 5 | Shovel-Servo
+6 & 7 | Vision-Pan
+8 & 9 | Vision-Tilt
+
+Although a short is technically overkill for the data ranges, it's good to allow for easier handling of negatives. Since packets are big enough, it'll simplify the coding (I don't really want to touch bit operations).
+
+
+
 ## Guidelines
 **All Arduino code must be in files in their own folders**. This is because
 the Arduino IDE only recognizes the code if its in its own folder. Processing
