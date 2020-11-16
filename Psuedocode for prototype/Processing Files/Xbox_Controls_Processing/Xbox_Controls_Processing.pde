@@ -5,29 +5,9 @@
   1. Left Joystick Y Value - Forward/Reverse
   2. Left Joystick X Value - Left/Right
   3. RT/LT Value - Pickup 
-  4. "X"/"B" Value - LeftCameraAngle/RightCameraAngle
+  4. "X"/"B" Value - Cruise Control Off/On
   5. "Y"/"A" Value - IncreaseSpeed/DecreaseSpeed
   6. LB/RB - Two Wheel Drive/Four Wheel Drive
-  7. The buttons underneath XBOX Logo(Left & Right) - Cruise control on/off
-  
-  Here is a directory of the Serial Inputs
-  1. "0" - Go forward
-  2. "1" - Go backwards
-  3. "2" - Go left
-  4. "3" - Go right
-  5. "4" - Go to neutral
-  6. "5" - Pickup item from floor
-  7. "6" - Throw item into containment area
-  8. "7" - Move camera to the left
-  9. "8" - Move camera to the right
-  10. "9" - Increase speed
-  11. "a" - Decrease speed
-  12. "b" - Two Wheel Drive
-  13. "c" - Four Wheel Drive
-  14. "d" - Cruise Control On
-  15. "e" - Cruise Control Off
-  
-  Note - I left Serial Command "4" last to make sure that it doesn't get triggered all the time
 */
 
 // Import Statements for Serial Processing
@@ -63,8 +43,6 @@ ControlDevice cont;
 ControlIO control;
 
 // Controller Button Variables
-ControlButton leftCameraAngle;
-ControlButton rightCameraAngle;
 ControlButton increaseSpeed;
 ControlButton decreaseSpeed;
 ControlButton twoWheel;
@@ -72,18 +50,28 @@ ControlButton fourWheel;
 ControlButton cruiseControlOn;
 ControlButton cruiseControlOff;
 
+// Current Drive Mode Variable(Used only for sound processing)
+int driverMode = 5;
+
 // Controller Value Holder Global Form
 int forwardReverse;
 int leftRight;
 int pickup;
-boolean leftCameraAngleStatus;
-boolean rightCameraAngleStatus;
 boolean increaseSpeedStatus;
 boolean decreaseSpeedStatus;
 boolean twoWheelStatus;
 boolean fourWheelStatus;
 boolean cruiseControlOnStatus;
 boolean cruiseControlOffStatus;
+
+// Speed Variable
+int currentMotorSpeed = 128; 
+
+// Drive Style Mode Variable -- When 0 then 4 wheel and when 1 then 2 wheel
+int driveStyle = 0;
+
+// Cruise Control Mode Variable -- When 0 then Off and when 1 then on
+int cruiseControl = 0;
 
 // GUI Control Variables
 ControlP5 cp5;
@@ -101,12 +89,6 @@ SoundFile NEUTRALMODE;
 UDP udpClient;
 final String NODE_IP = "192.168.4.1";
 final int NODE_PORT = 6969;
-
-// Speed Variable(used later for GUI only)
-float currentMotorSpeed = 128; 
-
-// Current Drive Mode Variable(Used for sound processing)
-int driverMode = 5;
 
 void setup ( ) {
   // Instantiates the controller 
@@ -235,14 +217,6 @@ void draw ( ) {
   // Read the value of the Z-Axis(RT/LT) on the Xbox Controller
   pickup = Math.round(cont.getSlider("ZAxis").getValue()* -255);
   
-  // Read to see what the status of the "X" button on the Xbox Controller
-  leftCameraAngle = cont.getButton("XButton");
-  leftCameraAngleStatus = leftCameraAngle.pressed();
-  
-  // Read to see what the status of the "B" button on the Xbox Controller
-  rightCameraAngle = cont.getButton("BButton");
-  rightCameraAngleStatus = rightCameraAngle.pressed();
-  
   // Read to see what the status of the "Y" button on the Xbox Controller
   increaseSpeed = cont.getButton("YButton");
   increaseSpeedStatus = increaseSpeed.pressed();
@@ -260,11 +234,11 @@ void draw ( ) {
   fourWheelStatus = fourWheel.pressed();
   
   // Read to see what the status of the left button underneath Xbox Logo on the Xbox Controller
-  cruiseControlOn = cont.getButton("leftButtonUnderneathXboxLogo");
+  cruiseControlOn = cont.getButton("XButton");
   cruiseControlOnStatus = cruiseControlOn.pressed();
   
   // Read to see what the status of the right button underneath Xbox Logo on the Xbox Controller
-  cruiseControlOff = cont.getButton("rightButtonUnderneathXboxLogo");
+  cruiseControlOff = cont.getButton("BButton");
   cruiseControlOffStatus = cruiseControlOff.pressed();
   
   // Updates the GUI
@@ -294,55 +268,45 @@ void draw ( ) {
       driverMode = 3;
     }
   }
-  /*
-  else if(leftCameraAngleStatus){
-    background (200, 200, 100);
-    myPort.write ( '7' ) ;
+  else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
+    if(driverMode != 4){
+      NEUTRALMODE.play();
+      driverMode = 4;
+    }
   }
-  else if(rightCameraAngleStatus){
-    background (100, 200, 200);
-    myPort.write ( '8' ) ;
-  }
-  else if(increaseSpeedStatus){
+  if(increaseSpeedStatus){
+    background(100, 100, 100);
     if(currentMotorSpeed <= 255){
       currentMotorSpeed += 5;
     }
     else if(currentMotorSpeed >= 255){
       currentMotorSpeed = 255;
     }
-    myPort.write ( '9' ) ;
   }
   else if(decreaseSpeedStatus){
+    background(200, 200, 200);
     if(currentMotorSpeed >= 0){
       currentMotorSpeed -= 5;
     }
     else if(currentMotorSpeed <= 0){
       currentMotorSpeed = 0;
     }
-    myPort.write ( 'a' ) ;
   }
-  else if(twoWheelStatus){
+  if(twoWheelStatus){
     background (125, 125, 125);
-    myPort.write( 'b' );
+    driveStyle = 1;
   }
   else if(fourWheelStatus){
     background (150, 150, 150);
-    myPort.write( 'c' );
+    driveStyle = 0;
   }
-  else if(cruiseControlOnStatus){
+  if(cruiseControlOnStatus){
     background (225, 225, 0);
-    myPort.write( 'd' );
+    cruiseControl = 1;
   }
   else if(cruiseControlOffStatus){
     background (225, 0, 225);
-    myPort.write( 'e' );
-  }
-  */
-  else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
-    if(driverMode != 4){
-      NEUTRALMODE.play();
-      driverMode = 4;
-    }
+    cruiseControl = 0;
   }
   sendPacket();
 }
@@ -353,5 +317,9 @@ void sendPacket () {
   packet.putShort((short) (forwardReverse % 256));  // 255 is max value, so %256
   packet.putShort((short) (leftRight % 256));
   packet.putShort((short) (pickup % 256));
+  packet.putShort((short) (currentMotorSpeed % 256));
+  packet.putShort((short) (driveStyle % 2));
+  packet.putShort((short) (cruiseControl % 2));
+  
   udpClient.send(packet.array(), NODE_IP, NODE_PORT);
 }
