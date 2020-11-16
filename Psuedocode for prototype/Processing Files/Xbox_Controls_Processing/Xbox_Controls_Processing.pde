@@ -48,6 +48,9 @@ import controlP5.*;
 // Import Statements for Sounds
 import processing.sound.*;
 
+// Import Statement for Java Arrays
+import java.util.Arrays;
+
 // Serial Communication Variable
 Serial myPort;
 
@@ -77,11 +80,6 @@ SoundFile TURNINGLEFT;
 SoundFile TURNINGRIGHT;
 SoundFile NEUTRALMODE;
 
-// For boosted cycles, these byte array have become global variables
-byte[] byteForwardReverse = {0, 1, 2, 3, 4, 5};
-byte[] byteLeftRight = {0, 1, 2, 3, 4, 5};
-byte[] bytePickup = {0, 1, 2, 3, 4, 5};
-
 // Speed Variable(used later for GUI only)
 float currentMotorSpeed = 128; 
 
@@ -102,7 +100,7 @@ void setup ( ) {
   }
   
   // Establishes the Serial Communication Connection
-  myPort  =  new Serial (this, "COM3",  9600);
+  myPort  =  new Serial (this, "COM5",  9600);
   myPort.bufferUntil ( '\n' );
   
   // Sets the canvas size for the color GUI
@@ -201,42 +199,12 @@ void draw ( ) {
   
   // Reads the value of the Y-Axis on the Xbox Controller
   float forwardReverse = cont.getSlider("forwardreverse").getValue();
-  
-  // Converts float value to byte array for Serial Communication
-  for(int i = 0; i < 6; i++){
-    try {
-      byteForwardReverse[i] = (byte) Float.toString(forwardReverse).charAt(i);
-    }
-    catch(Exception e){
-      break;
-    }
-  }
 
   // Reads the value of the X-Axis on the Xbox Controller
   float leftRight = cont.getSlider("leftright").getValue();
   
-  // Converts float value to byte array for Serial Communication
-  for(int i = 0; i < 6; i++){
-    try {
-      byteLeftRight[i] = (byte) Float.toString(leftRight).charAt(i);
-    }
-    catch(Exception e){
-      break;
-    }
-  }
-  
   // Read the value of the Z-Acis(RT/LT) on the Xbox Controller
   float pickup = cont.getSlider("pickup").getValue();
-  
-  // Converts float value to byte array for Serial Communication
-  for(int i = 0; i < 6; i++){
-    try {
-      bytePickup[i] = (byte) Float.toString(pickup).charAt(i);
-    }
-    catch(Exception e){
-      break;
-    }
-  }
   
   // Read to see what the status of the "X" button on the Xbox Controller
   leftCameraAngle = cont.getButton("leftcameraangle");
@@ -274,14 +242,15 @@ void draw ( ) {
   gui(forwardReverse*-1, leftRight *-1, pickup*-1, currentMotorSpeed/255);
   
   // Sends Forward Reverse Value to Arduino
-  myPort.write(byteForwardReverse);
+  myPort.write(Float.toString(forwardReverse));  
   
+  /*
   // Sends Left Right Value to Arduino
-  myPort.write(byteLeftRight);
+  myPort.write(Float.toString(leftRight));
   
   // Sends Pickup Value to Arduino
-  myPort.write(bytePickup);
-  
+  myPort.write(Float.toString(pickup));
+  */
   if(forwardReverse > 0.1 && abs(leftRight) < abs(forwardReverse)){  
     if(driverMode != 0){
       GOINGFORWARD.play();
@@ -360,5 +329,4 @@ void draw ( ) {
       driverMode = 4;
     }
   }
-  println("Cycle Completed");
 }

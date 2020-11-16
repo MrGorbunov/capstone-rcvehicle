@@ -19,7 +19,9 @@ void setup() {
 void loop() {
   // Checks to see if Processing has sent any signals
   if (Serial.available ( ) > 0) {
-    // Sets a variable to the signal from Processing
+    // Sets a variable to the serial com signal from Processing
+    // 0 = < - 0.1 on Y-Axis
+    // 
     char state = Serial.read ( );
 
     // If the signal is 1, then set the RGB LED to 255 on Red

@@ -2,8 +2,8 @@
 import processing.serial.*;
 
 // Import Statements for Gaming Inputs
-import net.java.games.input.*;
-import org.gamecontrolplus.*;
+import net.gamecontrolplus.*;
+import org.java.games.input.*;
 import org.gamecontrolplus.gui.*;
 
 // Import Statements for Arduino Compiling and Example Software 
