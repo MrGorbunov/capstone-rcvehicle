@@ -14,13 +14,13 @@ These packets contain motor speeds, and because we only have to send data for 5 
 
 -- or --
 
-byte index  |  motor
---------------------
-0 & 1 | Drive-left
-2 & 3 | Drive-right
-4 & 5 | Shovel-Servo
-6 & 7 | Vision-Pan
-8 & 9 | Vision-Tilt
+| byte index  |  motor |
+| :------- | :-------- |
+| 0 & 1 | Drive-left |
+| 2 & 3 | Drive-right |
+| 4 & 5 | Shovel-Servo |
+| 6 & 7 | Vision-Pan |
+| 8 & 9 | Vision-Tilt |
 
 Although a short is technically overkill for the data ranges, it's good to allow for easier handling of negatives. Since packets are big enough, it'll simplify the coding (I don't really want to touch bit operations).
 
