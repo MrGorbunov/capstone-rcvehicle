@@ -22,6 +22,10 @@ These packets contain motor speeds, and because we only have to send data for 5 
 | 6 & 7 | Vision-Pan |
 | 8 & 9 | Vision-Tilt |
 
+*Tilt refers to up & down*
+*Pan is left to right*
+
+
 Although a short is technically overkill for the data ranges, it's good to allow for easier handling of negatives. Since packets are big enough, it'll simplify the coding (I don't really want to touch bit operations).
 
 
