@@ -28,15 +28,15 @@ import java.nio.ByteBuffer; // Used for packet building
 
 // Motor speeds
 // Pan is left to right, tilt is up & down
-int visionPanAngle = 0;   // 0-360
-int visionTiltAngle = 0;  // 0-360
-int shovelServoAngle = 0  // 0-360
 // TODO: How is this supposed to ever go backwards?
 int leftDriveSpeed = 0;   // 0-255
 int rightDriveSpeed = 0;  // 0-255
+int shovelServoAngle = 0; // 0-360
+int visionPanAngle = 0;   // 0-360
+int visionTiltAngle = 0;  // 0-360
 
 
-// Networking globals
+// Networking globals (port constant just needs to match on the cpp side)
 UDP udpClient;
 final String NODE_IP = "192.168.4.1";
 final int NODE_PORT = 6969; // Haha funny number
@@ -75,11 +75,11 @@ void draw() {
 void sendPacket () {
   ByteBuffer packet = ByteBuffer.allocate(10); // 10 bytes long
 
-  packet.putShort((short) leftDriveSpeed % 255);
-  packet.putShort((short) rightDriveSpeed % 255);
-  packet.putShort((short) shovelServoAngle % 360);
-  packet.putShort((short) visionPanAngle % 360);
-  packet.putShort((short) visionTiltAngle % 360);
+  packet.putShort((short) (leftDriveSpeed % 256));  // 255 is max value, so %256
+  packet.putShort((short) (rightDriveSpeed % 256));
+  packet.putShort((short) (shovelServoAngle % 361));
+  packet.putShort((short) (visionPanAngle % 361));
+  packet.putShort((short) (visionTiltAngle % 361));
 
   udpClient.send(packet.array(), NODE_IP, NODE_PORT);
 }

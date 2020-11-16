@@ -92,13 +92,13 @@ bool readPacket() {
      needed to convert the signed characters into unsigned ints.
   */
 
-  int reconstructedValues[5] = { };
+  int reconstructedValues[5] = { 0 };
 
   for (int i=0; i<10; i+=2) {
     int intCast1 = (int) (u_char) packetBuffer[i];
     int intCast2 = (int) (u_char) packetBuffer[i+1];
 
-    int reconstructedValues[i/2] = intCast1 * 256 + intCast2;
+    reconstructedValues[i/2] = intCast1 * 256 + intCast2;
   }
 
   // This specific pairing can be found in the README
