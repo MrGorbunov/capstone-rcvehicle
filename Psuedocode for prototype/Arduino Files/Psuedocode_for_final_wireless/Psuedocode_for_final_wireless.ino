@@ -31,7 +31,7 @@
 */
 
 // RGB LED DP
-const int BLUERGBLEDDP = 4;
+const int BLUERGBLEDDP = 3;
 const int GREENRGBLEDDP = 5;
 const int REDRGBLEDDP = 6;
 
@@ -46,6 +46,9 @@ const int RIGHTREARMOTORINPUTTWO =  12;
 
 // Front Motor DP
 const int FRONTMOTOR = 13;
+
+// RGB Color Method Forward Declaration
+void rgbColorChange(int, int);
 
 // Configuration Motor Methods Forward Declaration
 void configureMotors(int, int, int, bool);
@@ -75,29 +78,30 @@ void setup() {
 void loop() {
   if (Serial.available ( ) > 0) {
     // Sets a variable to the signal from Processing
-    char state = Serial.read();
-    
-    if(state == '0'){
+    String state = String(Serial.read());
+    if(String(state.charAt(1)) == "FR"){
       configureMotors(driveStyle, 0, motorSpeed, cruiseControl);
+      rgbColorChange(255, 0);
     }
-    else if(state == '1'){
+    else if(String(state.charAt(0)) + String(state.charAt(1)) == "LR"){
       configureMotors(driveStyle, 1, motorSpeed, cruiseControl);
+      rgbColorChange(0, 255);
     }
-    else if(state == '2'){
+    else if(state == "2"){
       configureMotors(driveStyle, 2, motorSpeed, cruiseControl);
     }
-    else if(state == '3'){
+    else if(state == "3"){
       configureMotors(driveStyle, 3, motorSpeed, cruiseControl);
     }
-    else if(state == '5'){
+    else if(state == "5"){
     }
-    else if(state == '6'){
+    else if(state == "6"){
     }
-    else if(state == '7'){
+    else if(state == "7"){
     }
-    else if(state == '8'){
+    else if(state == "8"){
     }
-    else if(state == '9'){
+    else if(state == "9"){
       if(motorSpeed >= 0){
         motorSpeed -= 5;
       }
@@ -105,7 +109,7 @@ void loop() {
         motorSpeed = 0;
       }
     }
-    else if(state == 'a'){
+    else if(state == "a"){
       if(motorSpeed <= 255){
         motorSpeed -= 5;
       }
@@ -113,19 +117,19 @@ void loop() {
         motorSpeed = 255;
       }
     }
-    else if(state == 'b'){
+    else if(state == "b"){
       driveStyle = 0;
     }
-    else if(state == 'c'){
+    else if(state == "c"){
       driveStyle = 1;
     }
-    else if(state == 'd'){
+    else if(state == "d"){
       cruiseControl = true;
     }
-    else if(state == 'e'){
+    else if(state == "e"){
       cruiseControl = false;
     }
-    else if(state == '4'){
+    else if(state == "4"){
       configureMotors(2, 0, motorSpeed, cruiseControl);
     }
   }
