@@ -72,6 +72,19 @@ ControlButton fourWheel;
 ControlButton cruiseControlOn;
 ControlButton cruiseControlOff;
 
+// Controller Value Holder Global Form
+int forwardReverse;
+int leftRight;
+int pickup;
+boolean leftCameraAngleStatus;
+boolean rightCameraAngleStatus;
+boolean increaseSpeedStatus;
+boolean decreaseSpeedStatus;
+boolean twoWheelStatus;
+boolean fourWheelStatus;
+boolean cruiseControlOnStatus;
+boolean cruiseControlOffStatus;
+
 // GUI Control Variables
 ControlP5 cp5;
 Accordion accordion;
@@ -84,24 +97,16 @@ SoundFile TURNINGLEFT;
 SoundFile TURNINGRIGHT;
 SoundFile NEUTRALMODE;
 
+// Networking globals (port constant just needs to match on the cpp side)
+UDP udpClient;
+final String NODE_IP = "192.168.4.1";
+final int NODE_PORT = 6969;
+
 // Speed Variable(used later for GUI only)
 float currentMotorSpeed = 128; 
 
 // Current Drive Mode Variable(Used for sound processing)
 int driverMode = 5;
-
-// Controller Value Holder Global Form
-float forwardReverse;
-float leftRight;
-float pickup;
-boolean leftCameraAngleStatus;
-boolean rightCameraAngleStatus;
-boolean increaseSpeedStatus;
-boolean decreaseSpeedStatus;
-boolean twoWheelStatus;
-boolean fourWheelStatus;
-boolean cruiseControlOnStatus;
-boolean cruiseControlOffStatus;
 
 void setup ( ) {
   // Instantiates the controller 
@@ -133,6 +138,13 @@ void setup ( ) {
   
   // Sets up the intial GUI
   gui(0, 0, 0, 0);
+  
+  // 50 packets / second
+  frameRate(50);
+  
+  // Networking
+  udpClient = new UDP(this, NODE_PORT);
+  udpClient.log(true); 
   
   // Plays boot up noice
   BOOTUP.play();
@@ -215,13 +227,13 @@ void draw ( ) {
   // The value of the controller joystick range from -1 to  1
   
   // Reads the value of the Y-Axis on the Xbox Controller
-  forwardReverse = cont.getSlider("YAxis").getValue();
+  forwardReverse = Math.round(cont.getSlider("YAxis").getValue()* -255);
 
   // Reads the value of the X-Axis on the Xbox Controller
-  leftRight = cont.getSlider("XAxis").getValue();
+  leftRight = Math.round(cont.getSlider("YAxis").getValue()* -255);
   
   // Read the value of the Z-Axis(RT/LT) on the Xbox Controller
-  pickup = cont.getSlider("ZAxis").getValue();
+  pickup = Math.round(cont.getSlider("ZAxis").getValue()* -255);
   
   // Read to see what the status of the "X" button on the Xbox Controller
   leftCameraAngle = cont.getButton("XButton");
@@ -258,16 +270,6 @@ void draw ( ) {
   // Updates the GUI
   gui(forwardReverse*-1, leftRight *-1, pickup*-1, currentMotorSpeed/255);
   
-  // Sends Forward Reverse Value to Arduino
-  myPort.write(Float.toString(forwardReverse));  
-  
-  /*
-  // Sends Left Right Value to Arduino
-  myPort.write(Float.toString(leftRight));
-  
-  // Sends Pickup Value to Arduino
-  myPort.write(Float.toString(pickup));
-  */
   if(forwardReverse > 0.1 && abs(leftRight) < abs(forwardReverse)){  
     if(driverMode != 0){
       GOINGFORWARD.play();
@@ -292,12 +294,7 @@ void draw ( ) {
       driverMode = 3;
     }
   }
-  else if(pickup > 0.1){
-    myPort.write ( '5' ) ;
-  }
-  else if(pickup < -0.1){
-    myPort.write ( '6' ) ;
-  }
+  /*
   else if(leftCameraAngleStatus){
     background (200, 200, 100);
     myPort.write ( '7' ) ;
@@ -340,10 +337,21 @@ void draw ( ) {
     background (225, 0, 225);
     myPort.write( 'e' );
   }
+  */
   else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
     if(driverMode != 4){
       NEUTRALMODE.play();
       driverMode = 4;
     }
   }
+  sendPacket();
+}
+
+// Networking Methods
+void sendPacket () {
+  ByteBuffer packet = ByteBuffer.allocate(10); // 10 bytes long
+  packet.putShort((short) (forwardReverse % 256));  // 255 is max value, so %256
+  packet.putShort((short) (leftRight % 256));
+  packet.putShort((short) (pickup % 256));
+  udpClient.send(packet.array(), NODE_IP, NODE_PORT);
 }
