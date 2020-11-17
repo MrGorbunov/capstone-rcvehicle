@@ -321,7 +321,14 @@ void initializeControllerReaders () {
  * calculateMotorSpeeds
  */
 void readControllerInputs () {
-  // Driving is based on joystick & the A button
+  /*
+     Control Scheme
+     ---
+     Drive Logic  -  Joystick, A Button
+  */
+
+  //
+  // Drive Logic
   double joyX = xJoy.getValue();
   double joyY = yJoy.getValue();
 
@@ -331,17 +338,27 @@ void readControllerInputs () {
   joyMagnitude = sqrt((float) (joyX*joyX + joyY*joyY));
   reverseDirection = aButton.pressed();
 
-  // And imma leave everything else to you Aryan
+  // And imma leave everything else to you Aryan <3
+  //
+  // Vision Control
+
+
+
+  //
+  // Pickup Mechanism
+
 }
 
 
 
 /**
- * Determins the actual motor values based on the higher
+ * Determines the actual motor values based on the higher
  * level globals set in readControllerInputs()
  */
 void calculateMotorSpeeds () {
   /*
+    Drive Logic
+    -----------
     The joystick's top & bottom halfs operate very differently
     and so are split up.
 
@@ -395,6 +412,28 @@ void calculateMotorSpeeds () {
     leftDriveSpeed = rightDriveSpeed;
     rightDriveSpeed = dummySpeed;
   }
+
+
+
+  /*
+     Vision Logic
+     ------------
+
+
+
+   */
+
+
+
+
+
+  /*
+     Pickup Logic
+     ------------
+
+
+
+   */
 
 }
 
