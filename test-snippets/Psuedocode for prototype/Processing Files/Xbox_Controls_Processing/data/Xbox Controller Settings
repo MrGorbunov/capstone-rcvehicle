@@ -1,0 +1,12 @@
+Controller for robot
+YAxis	Controls forward and reverse function	3	SLIDER	Y Axis	0	1.0	0.0
+XAxis	Controls left and right function	3	SLIDER	X Axis	0	1.0	0.0
+ZAxis	Controls pickup mechanism	3	SLIDER	Z Axis	0	1.0	0.0
+XButton	Turns camera in a left angle	1	BUTTON	Button 2	0	0.0	0.0
+BButton	Turns camera in a right angle	1	BUTTON	Button 1	0	0.0	0.0
+YButton	Increase speed	1	BUTTON	Button 3	0	0.0	0.0
+AButton	Decrease speed	1	BUTTON	Button 0	0	0.0	0.0
+LBButton	Activate Two Wheel Drive	1	BUTTON	Button 4	0	0.0	0.0
+RBButton	Activate Four Wheel Drive	1	BUTTON	Button 5	0	0.0	0.0
+leftButtonUnderneathXboxLogo	Activate Cruise Control On	1	BUTTON	Button 6	0	0.0	0.0
+rightButtonUnderneathXboxLogo	Activate Cruise Control Off	1	BUTTON	Button 7	0	0.0	0.0
