@@ -119,39 +119,22 @@ void setup() {
   myPort  =  new Serial (this, "COM5",  9600);
   myPort.bufferUntil( '\n' );
 
-
   // Initial call sets up the screen
   size(500,  500);
   gui(0, 0, 0, 0);
+  initializeSounds();
 
-  BOOTUP = new SoundFile(this, "BOOTUPSOUND.wav");
-  GOINGFORWARD = new SoundFile(this, "GOINGFORWARD.wav");
-  GOINGBACKWARDS = new SoundFile(this, "GOINGBACKWARDS.wav");
-  TURNINGLEFT = new SoundFile(this, "TURNLEFT.wav");
-  TURNINGRIGHT = new SoundFile(this, "TURNRIGHT.wav");
-  NEUTRALMODE = new SoundFile(this, "NEUTRALMODE.wav");
-
-
-  // Find controller
-  control = ControlIO.getInstance(this);
-  // Setup reader with settings in file "Xbox Controller Settings"
-  cont = control.getMatchedDevice("Xbox Controller Settings");
-  
-  if (cont == null) {
-    println("Error connecting with controller");
-    System.exit(-1);
-  }
-
+  initializeController();  // Order here matters
   initializeControllerReaders();
-  
   
   // Networking
   frameRate(50); // 50 packets (draw calls) / second
   udpClient = new UDP(this, NODE_PORT);
-  udpClient.log(true);  // Verbose output, not necessary
-  
+  udpClient.log(true);  // Verbose output, helpful but not necessary
 
-  // Finally, play sound to get things started
+
+
+  // Finally, play sound and get things started
   BOOTUP.play();
   delay(3000);
 }
@@ -174,6 +157,15 @@ void draw ( ) {
 //
 // GUI Methods
 //
+
+void initializeSounds () {
+  BOOTUP = new SoundFile(this, "BOOTUPSOUND.wav");
+  GOINGFORWARD = new SoundFile(this, "GOINGFORWARD.wav");
+  GOINGBACKWARDS = new SoundFile(this, "GOINGBACKWARDS.wav");
+  TURNINGLEFT = new SoundFile(this, "TURNLEFT.wav");
+  TURNINGRIGHT = new SoundFile(this, "TURNRIGHT.wav");
+  NEUTRALMODE = new SoundFile(this, "NEUTRALMODE.wav");
+}
 
 void gui(float forwardReverse, float leftRight, float pickup, float currentMotorSpeed) {
   cp5 = new ControlP5(this);
@@ -248,6 +240,22 @@ void gui(float forwardReverse, float leftRight, float pickup, float currentMotor
 //
 // Reading Controller & Motor Speed Logic
 //
+
+/**
+ * Initializes the controller instance, and exits
+ * the program if no valid instance is found
+ */
+void initializeController () {
+  // Find controller
+  control = ControlIO.getInstance(this);
+  // Setup reader with settings in file "Xbox Controller Settings"
+  cont = control.getMatchedDevice("Xbox Controller Settings");
+  
+  if (cont == null) {
+    println("Error connecting with controller");
+    System.exit(-1);
+  }
+}
 
 /**
  * Initializes ControllerButton & ControllerSlider classes,
