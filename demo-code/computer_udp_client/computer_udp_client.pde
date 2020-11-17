@@ -23,9 +23,6 @@ import controlP5.*;        // GUI Library
 //
 // GUI 
 ControlP5 cp5;
-Accordion accordion;
-
-
 
 
 //
@@ -56,24 +53,22 @@ final int NODE_PORT = 6969; // Haha funny number
 
 void setup() {
   // Initial call sets up the screen
-  size(500,  500);
+  size(1000,  1000);
+  background(0);
 
   // Networking
   frameRate(50); // 50 packets (draw calls) / second
   udpClient = new UDP(this, NODE_PORT);
-  udpClient.log(true);  // Verbose output, helpful but not necessary
+  udpClient.log(false);  // Verbose output, helpful but not necessary
+
+  // GUI setup
+  initializeGUI();
 }
 
 void draw ( ) {
-  background(186, 252, 3); // This should really go into GUI
+  background(10);
 
-  leftDriveSpeed += 1;
-  rightDriveSpeed -= 1;
-  
-  shovelServoAngle++;
-  
-  visionPanAngle++;
-  visionTiltAngle++;
+  // Value updating is handled by GUI
 
   sendPacket();
 }
@@ -91,11 +86,13 @@ void sendPacket () {
 
   packet.putShort((short) ( constrain(leftDriveSpeed, -255, 255) + 255));  // drive speeds are from -255 to 255, but 
   packet.putShort((short) ( constrain(rightDriveSpeed, -255, 255) + 255)); // sending negatives in packets is a pain
-  packet.putShort((short) (shovelServoAngle % 181));                       // so the esp code does - 255 of what it recieves
-  packet.putShort((short) (visionPanAngle % 181));
-  packet.putShort((short) (visionTiltAngle % 181));
+  packet.putShort((short) (shovelServoAngle % 361));                        // so the esp code does - 255 of what it recieves
+  packet.putShort((short) (visionPanAngle % 361));
+  packet.putShort((short) (visionTiltAngle % 361));
 
   udpClient.send(packet.array(), NODE_IP, NODE_PORT);
+
+  // System.out.println("Sent packet: " + shovelServoAngle);
 }
 
 
@@ -106,68 +103,40 @@ void sendPacket () {
 // GUI Methods
 //
 
-// void gui(float forwardReverse, float leftRight, float pickup, float currentMotorSpeed) {
-//   cp5 = new ControlP5(this);
-// 
-//   // group number 3, contains a bang and a slider
-//   Group g3 = cp5.addGroup("Controller Information")
-//                 .setBackgroundColor(color(0, 64))
-//                 .setBackgroundHeight(150)
-//                 ;
-//   
-//   // Shows the value of the Y - Axis| Forward and Reverse Directiom
-//   cp5.addSlider("Forward and Reverse")
-//      .setPosition(60,20)
-//      .setSize(100,20)
-//      .setRange(-1,1)
-//      .setValue(forwardReverse)
-//      .moveTo(g3)
-//      ;
-//   
-//   // Shows the value of the X-Axis| Left and Right Direction
-//   cp5.addSlider("Left and Right")
-//      .setPosition(60,50)
-//      .setSize(100,20)
-//      .setRange(-1, 1)
-//      .setValue(leftRight)
-//      .moveTo(g3)
-//      ;
-//    
-//   // Shows the value of the LT/RT| Pickup Servo Level
-//   cp5.addSlider("Pickup")
-//     .setPosition(60,80)
-//     .setSize(100, 20)
-//     .setRange(-1, 1)
-//     .setValue(pickup)
-//     .moveTo(g3)
-//     ;
-//   
-//   // Shows the value of the LT/RT| Pickup Servo Level
-//   cp5.addSlider("Motor Speed")
-//     .setPosition(60,110)
-//     .setSize(100, 20)
-//     .setRange(0, 1)
-//     .setValue(currentMotorSpeed)
-//     .moveTo(g3)
-//     ;
-//   
-//   // Allows Menu to Be Collapsed
-//   accordion = cp5.addAccordion("acc")
-//                  .setPosition(94,125)
-//                  .setWidth(300)
-//                  .addItem(g3)
-//                  ;
-//                  
-//   // Some GUI Code(I copied form online)              
-//   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.open(0,1,2);}}, 'o');
-//   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.close(0,1,2);}}, 'c');
-//   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.setWidth(300);}}, '1');
-//   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.setPosition(0,0);accordion.setItemHeight(190);}}, '2'); 
-//   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.setCollapseMode(ControlP5.ALL);}}, '3');
-//   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {accordion.setCollapseMode(ControlP5.SINGLE);}}, '4');
-//   cp5.mapKeyFor(new ControlKey() {public void keyEvent() {cp5.remove("myGroup1");}}, '0');
-//   
-//   // Allows one section to be open at a time
-//   accordion.open(0,1,2);
-//   accordion.setCollapseMode(Accordion.SINGLE);
-// }
+void initializeGUI () {
+  cp5 = new ControlP5(this);
+
+  cp5.addKnob("shovelServoAngle")
+     .setRange(0, 180)
+     .setValue(0)
+     .setPosition(60, 140)
+     .setRadius(100)
+     .setDragDirection(Knob.VERTICAL);
+
+  cp5.addKnob("visionPanAngle")
+     .setRange(0, 180)
+     .setValue(0)
+     .setPosition(60, 400)
+     .setRadius(100)
+     .setDragDirection(Knob.VERTICAL);
+
+  cp5.addKnob("visionTiltAngle")
+     .setRange(0, 180)
+     .setValue(0)
+     .setPosition(60, 660)
+     .setRadius(100)
+     .setDragDirection(Knob.VERTICAL);
+
+  cp5.addSlider("leftDriveSpeed")
+    .setRange(-255, 255)
+    .setValue(0)
+    .setPosition(460, 80)
+    .setSize(100, 800);
+
+  cp5.addSlider("rightDriveSpeed")
+    .setRange(-255, 255)
+    .setValue(0)
+    .setPosition(600, 80)
+    .setSize(100, 800);
+}
+
