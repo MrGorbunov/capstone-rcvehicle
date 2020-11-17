@@ -380,12 +380,11 @@ void calculateMotorSpeeds () {
   }
 
   /*
-    To reverse direction, I can just swap the two motor speeds
+    To reverse direction, make motor speeds go backwards
   */
   if (reverseDirection) {
-    int dummySpeed = leftDriveSpeed;
-    leftDriveSpeed = rightDriveSpeed;
-    rightDriveSpeed = dummySpeed;
+    leftDriveSpeed *= -1;
+    rightDriveSpeed *= -1;
   }
 
 }
