@@ -51,8 +51,8 @@ Serial myPort;
 ControlP5 cp5;
 Accordion accordion;
 
-SoundFile BOOTUP;         // Sounds get loaded in setup()
-SoundFile GOINGFORWARD;
+SoundFile BOOTUP;         // Sounds get loaded in setup
+SoundFile GOINGFORWARD;   
 SoundFile GOINGBACKWARDS;
 SoundFile TURNINGLEFT;
 SoundFile TURNINGRIGHT;
@@ -61,34 +61,32 @@ SoundFile NEUTRALMODE;
 
 //
 // Controller Reading
-ControlDevice cont;
 ControlIO control;
+ControlDevice cont;
 
-ControlButton increaseSpeed;
-ControlButton decreaseSpeed;
-ControlButton twoWheel;
-ControlButton fourWheel;
-ControlButton cruiseControlOn;
-ControlButton cruiseControlOff;
+ControlButton yButton; // Buttons
+ControlButton xButton; 
+ControlButton bButton;
+ControlButton aButton; 
+
+ControlButton lBumper;
+ControlButton rBumper;
+
+ControlSlider xJoy;
+ControlSlider yJoy;
+
+ControlSlider triggers;
+
+
 
 
 //
 // Drive Logic Globals
-int driverMode = 5;
+final double MAX_SPEED = 255; // Gets multiplied by nums on -1 to 1
 
-int forwardReverse; // Command-esque inputs
-int leftRight;
-int pickup;
-boolean increaseSpeedStatus = false;
-boolean decreaseSpeedStatus = false;
-boolean twoWheelStatus = true;
-boolean fourWheelStatus = false;
-boolean cruiseControlOnStatus = false;
-boolean cruiseControlOffStatus = true;
-
-int currentMotorSpeed = 128; // Control variables
-int driveStyle = 0;    // 0 = 4wd, 1 = 2wd
-int cruiseControl = 0; // 0 = off, 1 = on
+double joyAngle = 0;
+double joyMagnitude = 0;
+boolean reverseDirection = false;
 
 // Actual motor speeds
 // _these get sent wirelessly to the esp_
@@ -118,11 +116,11 @@ final int NODE_PORT = 6969; // Haha funny number
 void setup() {
   // Establishes the Serial Communication Connection
   myPort  =  new Serial (this, "COM5",  9600);
-  myPort.bufferUntil ( '\n' );
+  myPort.bufferUntil( '\n' );
 
 
   // Initial call sets up the screen
-  size (500,  500);
+  size(500,  500);
   gui(0, 0, 0, 0);
 
   BOOTUP = new SoundFile(this, "BOOTUPSOUND.wav");
@@ -142,6 +140,8 @@ void setup() {
     println("Error connecting with controller");
     System.exit(-1);
   }
+
+  initializeControllerReaders();
   
   
   // Networking
@@ -156,113 +156,14 @@ void setup() {
 }
 
 void draw ( ) {
-  background(186, 252, 3);
-  
-  // The value of the controller joystick range from -1 to  1
-  
-  // Reads the value of the Y-Axis on the Xbox Controller
-  forwardReverse = Math.round(cont.getSlider("YAxis").getValue()* -255);
+  background(186, 252, 3); // This should really go into GUI
 
-  // Reads the value of the X-Axis on the Xbox Controller
-  leftRight = Math.round(cont.getSlider("YAxis").getValue()* -255);
-  
-  // Read the value of the Z-Axis(RT/LT) on the Xbox Controller
-  pickup = Math.round(cont.getSlider("ZAxis").getValue()* -255);
-  
-  // Read to see what the status of the "Y" button on the Xbox Controller
-  increaseSpeed = cont.getButton("YButton");
-  increaseSpeedStatus = increaseSpeed.pressed();
-  
-  // Read to see what the status of the "A" button on the Xbox Controller
-  decreaseSpeed = cont.getButton("AButton");
-  decreaseSpeedStatus = decreaseSpeed.pressed();
-  
-  // Read to see what the status of the LB button on the Xbox Controller
-  twoWheel = cont.getButton("LBButton");
-  twoWheelStatus = twoWheel.pressed();
-  
-  // Read to see what the status of the RB button on the Xbox Controller
-  fourWheel = cont.getButton("RBButton");
-  fourWheelStatus = fourWheel.pressed();
-  
-  // Read to see what the status of the left button underneath Xbox Logo on the Xbox Controller
-  cruiseControlOn = cont.getButton("XButton");
-  cruiseControlOnStatus = cruiseControlOn.pressed();
-  
-  // Read to see what the status of the right button underneath Xbox Logo on the Xbox Controller
-  cruiseControlOff = cont.getButton("BButton");
-  cruiseControlOffStatus = cruiseControlOff.pressed();
-  
-  // Updates the GUI
-  gui(forwardReverse*-1, leftRight *-1, pickup*-1, currentMotorSpeed/255);
-  
-  if(forwardReverse > 0.1 && abs(leftRight) < abs(forwardReverse)){  
-    if(driverMode != 0){
-      GOINGFORWARD.play();
-      driverMode = 0;
-    }
-  }
-  else if(forwardReverse < -0.1 && abs(leftRight) < abs(forwardReverse)){
-    if(driverMode != 1){
-      GOINGBACKWARDS.play();
-      driverMode = 1;
-    }
-  }
-  else if(leftRight > 0.1 && abs(leftRight) > abs(forwardReverse)){
-    if(driverMode != 2){
-      TURNINGRIGHT.play();
-      driverMode = 2;
-    }
-  }
-  else if(leftRight < -0.1 && abs(leftRight) > abs(forwardReverse)){
-    if(driverMode != 3){
-      TURNINGLEFT.play();
-      driverMode = 3;
-    }
-  }
-  else if(forwardReverse < 0.1 && forwardReverse > -0.1 && leftRight < 0.1 && leftRight > -0.1){
-    if(driverMode != 4){
-      NEUTRALMODE.play();
-      driverMode = 4;
-    }
-  }
-  if(increaseSpeedStatus){
-    background(100, 100, 100);
-    if(currentMotorSpeed <= 255){
-      currentMotorSpeed += 5;
-    }
-    else if(currentMotorSpeed >= 255){
-      currentMotorSpeed = 255;
-    }
-  }
-  else if(decreaseSpeedStatus){
-    background(200, 200, 200);
-    if(currentMotorSpeed >= 0){
-      currentMotorSpeed -= 5;
-    }
-    else if(currentMotorSpeed <= 0){
-      currentMotorSpeed = 0;
-    }
-  }
-  if(twoWheelStatus){
-    background (125, 125, 125);
-    driveStyle = 1;
-  }
-  else if(fourWheelStatus){
-    background (150, 150, 150);
-    driveStyle = 0;
-  }
-  if(cruiseControlOnStatus){
-    background (225, 225, 0);
-    cruiseControl = 1;
-  }
-  else if(cruiseControlOffStatus){
-    background (225, 0, 225);
-    cruiseControl = 0;
-  }
-  // readControllerInputs();
-  // calculateMotorSpeeds();
+  readControllerInputs();
+  calculateMotorSpeeds();
   sendPacket();
+
+  // GUI needs a re-write because of how this is working
+  gui(forwardReverse*-1, leftRight *-1, pickup*-1, currentMotorSpeed/255);
 }
 
 
@@ -339,6 +240,82 @@ void gui(float forwardReverse, float leftRight, float pickup, float currentMotor
   accordion.setCollapseMode(Accordion.SINGLE);
 }
 
+
+
+
+
+//
+// Reading Controller & Motor Speed Logic
+//
+
+/**
+ * Initializes ControllerButton & ControllerSlider classes,
+ * because doing so in the draw call is suboptimal.
+ */
+void initializeControllerReaders () {
+  /*
+    Hardware Inputs
+
+    Y, X, B, & A Button
+    ---
+    The 4 buttons on the controller are fairly straightforward,
+    just remember it's an XBox cont so buttons are:
+                        Y
+                      X   B
+                        A
+
+
+    LB & RB Button
+    ---
+    Lastly, the top 2 bumped buttons are RightBumper (RB) & LeftBumped (LB)
+
+
+    XAxis & YAxis
+    ---
+    Joystick has X & Y axese, corresponding to where the
+    joystick is pointed. Both values are confined to a 
+    circle, i.e. x^2 + y^2 <= 1 AND magnitude is meaningful.
+
+
+    ZAxis
+    ---
+    Left & Right triggers do something weird, wherein they add
+    together. Right trigger = -1, Left trigger = +1. If both are
+    held down the ZAxis returns 0. Note this does return inbetween
+    values (ex: 0.6).
+  */
+
+  yButton = cont.getButton("YButton");
+  xButton = cont.getButton("XButton");
+  bButton = cont.getButton("BButton");
+  aButton = cont.getButton("AButton");
+
+  lBumper = cont.getButton("LBButton");
+  rBumper = cont.getButton("RBButton");
+
+  xJoy = cont.getSlider("XAxis");
+  yJoy = cont.getSlider("YAxis");
+
+  triggers = cont.getSlider("ZAxis");
+
+  // This means that values on -0.1 to 0.1 are read in as 0s
+  xJoy.setTolerance(0.1);
+  yJoy.setTolerance(0.1);
+  triggers.setTolerance(0.1);
+}
+
+/**
+ * Converts the raw controller values into higher level
+ * variables, which get converted to motor speeds in
+ * calculateMotorSpeeds
+ */
+void readControllerInputs () {
+}
+
+void calculateMotorSpeeds () {
+
+
+}
 
 
 
