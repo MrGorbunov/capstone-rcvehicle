@@ -320,7 +320,7 @@ void readControllerInputs () {
   if (joyY <= 0)
     spinningInPlace = true;
   joyXAmount = joyX;
-  joyMagnitude = sqrt(joyX*joyX + joyY*joyY);
+  joyMagnitude = sqrt((float) (joyX*joyX + joyY*joyY));
   reverseDirection = aButton.pressed();
 
   // And imma leave everything else to you Aryan
@@ -350,7 +350,8 @@ void calculateMotorSpeeds () {
 
   if (spinningInPlace) {
     double spinSpeed = joyXAmount;
-    double motorSpeed = MAX_SPEED * spinSpeed * joyMagnitude;
+    // Parentheses keep the cast as the last operation, prevents rounding errors
+    int motorSpeed = (int) (MAX_SPEED * spinSpeed * joyMagnitude);
 
     // Spinning in place, so both sides spin opposite each other
     leftDriveSpeed = motorSpeed;
@@ -362,19 +363,19 @@ void calculateMotorSpeeds () {
       a constant speed while the slower motor changes from 
       speed to -speed, as the turn intensity increases.
     */
-    double spinAmount = abs(joyXAmount);
+    double spinAmount = abs((float) joyXAmount);
     // TODO: Test this mapping
-    double slowerWheelTurnSpeed = map(spinAmount, 0, 1, MAX_SPEED, -MAX_SPEED);
+    double slowerWheelTurnSpeed = map((float) spinAmount, 0f, 1f, (float) MAX_SPEED, (float) -MAX_SPEED);
 
     boolean clockwise = joyXAmount > 0;
     double speed = joyMagnitude * MAX_SPEED;
 
     if (clockwise) {
-      leftDriveSpeed = speed;
-      rightDriveSpeed = slowerWheelTurnSpeed;
+      leftDriveSpeed = (int) speed;
+      rightDriveSpeed = (int) slowerWheelTurnSpeed;
     } else {
-      rightDriveSpeed = speed;
-      leftDriveSpeed = slowerWheelTurnSpeed;
+      rightDriveSpeed = (int) speed;
+      leftDriveSpeed = (int) slowerWheelTurnSpeed;
     }
   }
 
@@ -408,6 +409,3 @@ void sendPacket () {
 
   udpClient.send(packet.array(), NODE_IP, NODE_PORT);
 }
-
-
-
