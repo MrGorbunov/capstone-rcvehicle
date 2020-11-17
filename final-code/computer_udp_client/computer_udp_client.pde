@@ -84,8 +84,9 @@ ControlSlider triggers;
 // Drive Logic Globals
 final double MAX_SPEED = 255; // Gets multiplied by nums on -1 to 1
 
-double joyAngle = 0;
 double joyMagnitude = 0;
+double joyXAmount = 0;
+boolean spinningInPlace = false;
 boolean reverseDirection = false;
 
 // Actual motor speeds
@@ -304,16 +305,87 @@ void initializeControllerReaders () {
   triggers.setTolerance(0.1);
 }
 
+
+
 /**
  * Converts the raw controller values into higher level
  * variables, which get converted to motor speeds in
  * calculateMotorSpeeds
  */
 void readControllerInputs () {
+  // Driving is based on joystick & the A button
+  double joyX = xJoy.getValue();
+  double joyY = yJoy.getValue();
+
+  if (joyY <= 0)
+    spinningInPlace = true;
+  joyXAmount = joyX;
+  joyMagnitude = sqrt(joyX*joyX + joyY*joyY);
+  reverseDirection = aButton.pressed();
+
+  // And imma leave everything else to you Aryan
 }
 
-void calculateMotorSpeeds () {
 
+
+/**
+ * Determins the actual motor values based on the higher
+ * level globals set in readControllerInputs()
+ */
+void calculateMotorSpeeds () {
+  /*
+    The joystick's top & bottom halfs operate very differently
+    and so are split up.
+
+    The top half of the joystick does what you'd expect, driving
+    the vehicle forward while turning. The more to the right
+    or left the more intense the turn.
+
+    The bottom half of the joystick however, turns in place,
+    and as you pull the joystick closer and closer to the bottom (0, -1),
+    the rate of turning slows down.
+
+    This allows for fine tuning for turning in place AND for driving forward.
+  */
+
+  if (spinningInPlace) {
+    double spinSpeed = joyXAmount;
+    double motorSpeed = MAX_SPEED * spinSpeed * joyMagnitude;
+
+    // Spinning in place, so both sides spin opposite each other
+    leftDriveSpeed = motorSpeed;
+    rightDriveSpeed = -motorSpeed;
+
+  } else {
+    /*
+      With this differential drive, the faster motor stays at 
+      a constant speed while the slower motor changes from 
+      speed to -speed, as the turn intensity increases.
+    */
+    double spinAmount = abs(joyXAmount);
+    // TODO: Test this mapping
+    double slowerWheelTurnSpeed = map(spinAmount, 0, 1, MAX_SPEED, -MAX_SPEED);
+
+    boolean clockwise = joyXAmount > 0;
+    double speed = joyMagnitude * MAX_SPEED;
+
+    if (clockwise) {
+      leftDriveSpeed = speed;
+      rightDriveSpeed = slowerWheelTurnSpeed;
+    } else {
+      rightDriveSpeed = speed;
+      leftDriveSpeed = slowerWheelTurnSpeed;
+    }
+  }
+
+  /*
+    To reverse direction, I can just swap the two motor speeds
+  */
+  if (reverseDirection) {
+    int dummySpeed = leftDriveSpeed;
+    leftDriveSpeed = rightDriveSpeed;
+    rightDriveSpeed = dummySpeed;
+  }
 
 }
 
