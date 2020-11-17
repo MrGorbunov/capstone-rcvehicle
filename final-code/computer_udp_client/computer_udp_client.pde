@@ -401,8 +401,8 @@ void calculateMotorSpeeds () {
 void sendPacket () {
   ByteBuffer packet = ByteBuffer.allocate(10); // 10 bytes long
 
-  packet.putShort((short) (leftDriveSpeed % 256));  // 255 is max value, so %256
-  packet.putShort((short) (rightDriveSpeed % 256));
+  packet.putShort((short) ( constrain(leftDriveSpeed, -255, 255) ));  // drive speeds are from -255 to 255,
+  packet.putShort((short) ( constrain(rightDriveSpeed, -255, 255) )); // so we can't just modulo
   packet.putShort((short) (shovelServoAngle % 361));
   packet.putShort((short) (visionPanAngle % 361));
   packet.putShort((short) (visionTiltAngle % 361));
