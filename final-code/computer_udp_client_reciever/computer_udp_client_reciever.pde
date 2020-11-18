@@ -385,6 +385,7 @@ void readControllerInputs () {
   //
   if(rBumper.pressed()){
     cruiseControl = !cruiseControl;
+    delay(100);
   }
   if(!cruiseControl){
     if(-0.1 <= yJoy && 0.1 >= yJoy)
