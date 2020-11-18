@@ -4,15 +4,12 @@
 
 //
 // Network Values
-const char SSID[] = "Ohmero Group - Capstone";
-const char PASS[] = "JoinTheResistance";
+const char SSID[] = "******";
+const char PASS[] = "******";
 
 // UDP Server configuration, must match with the processing sketch
 WiFiUDP UDP;
-IPAddress local_IP(192,168,4,1);
-IPAddress gateway(192,168,4,1);
-IPAddress subnet(255,255,255,0);
-const int UDP_PORT = 6969;
+const int UDP_PORT = 12345;
 
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE];
 
@@ -63,13 +60,11 @@ void setup() {
   // Network Setup
   Serial.print("Starting Soft AP... ");
 
-  WiFi.softAPConfig(local_IP, gateway, subnet);
-  WiFi.softAP(SSID, PASS);
+  WiFi.begin(SSID, PASS);
 
-  Serial.print("Soft AP ");
+  Serial.print("Connecting to Wifi");
   Serial.print(SSID);
   Serial.print(" started at ");
-  Serial.println(WiFi.softAPIP());
 
   // Begin listening for UDP packets
   UDP.begin(UDP_PORT);
