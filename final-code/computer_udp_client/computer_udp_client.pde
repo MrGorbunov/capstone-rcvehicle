@@ -100,8 +100,8 @@ int rightDriveSpeed = 0;  // 0-255
 int shovelServoAngle = 0; // 0-360
 float avrMotor = 0;
 // Pan is side to side, tilt is up & down
-int visionPanAngle = 90;   // 0-180
-int visionTiltAngle = 90;  // 0-180
+float visionPanAngle = 90;   // 0-180
+float visionTiltAngle = 90;  // 0-180
 
 
 //
@@ -137,7 +137,6 @@ void setup() {
 
   // Finally, play sound and get things started
   BOOTUP.play();
-  delay(3000);
 }
 
 void draw ( ) {
@@ -380,24 +379,23 @@ void readControllerInputs () {
     reverseDirection = aButton.pressed();
   }
 
-  // And imma leave everything else to you Aryan <3
   //
   // Vision Control
   if(dPad.left()){
-    visionPanAngle -= 5;
+    visionPanAngle -= 2.5;
     if(visionPanAngle <= 0)
       visionPanAngle = 0;
   }else if(dPad.right()){
-    visionPanAngle += 5;
+    visionPanAngle += 2.5;
     if(visionPanAngle >= 180)
       visionPanAngle = 180;
   }
   else if(dPad.up()){
-    visionTiltAngle -= 5;
+    visionTiltAngle -= 2.5;
     if(visionTiltAngle <= 0)
       visionTiltAngle = 0;
   }else if(dPad.down()){
-    visionTiltAngle += 5;
+    visionTiltAngle += 2.5;
     if(visionTiltAngle >= 180)
       visionTiltAngle = 180;
   }
@@ -438,50 +436,27 @@ void calculateMotorSpeeds () {
     This allows for fine tuning for turning in place AND for driving forward.
   */
   if(!cruiseControl){
-      if (spinningInPlace) {
-        double spinSpeed = joyXAmount;
-        // Parentheses keep the cast as the last operation, prevents rounding errors
-        int motorSpeed = (int) (MAX_SPEED * spinSpeed * joyMagnitude);
-    
-        // Spinning in place, so both sides spin opposite each other
-        leftDriveSpeed = motorSpeed;
-        rightDriveSpeed = -motorSpeed;
-    
-      } else {
-        /*
-          With this differential drive, the faster motor stays at 
-          a constant speed while the slower motor changes from 
-          speed to -speed, as the turn intensity increases.
-        */
-        double spinAmount = abs((float) joyXAmount);
-        // TODO: Test this mapping
-        double slowerWheelTurnSpeed = map((float) spinAmount, 0f, 1f, (float) MAX_SPEED, (float) -MAX_SPEED);
-    
-        boolean clockwise = joyXAmount > 0;
-        double speed = joyMagnitude * MAX_SPEED;
-    
-        if (clockwise) {
-          leftDriveSpeed = (int) speed;
-          rightDriveSpeed = (int) slowerWheelTurnSpeed;
-        } else {
-          rightDriveSpeed = (int) speed;
-          leftDriveSpeed = (int) slowerWheelTurnSpeed;
-        }
+      if(yJoy * -1 >= 0 && abs(yJoy) >= abs(xJoy)){
+        leftDriveSpeed = Math.round(abs(yJoy) * 255);
+        rightDriveSpeed = Math.round(abs(yJoy) * 255);
+      }else if(yJoy * -1 <= 0 && abs(yJoy) >= abs(xJoy)){
+        leftDriveSpeed = Math.round(yJoy * 255);
+        rightDriveSpeed = Math.round(yJoy * 255);
       }
-      int holder = leftDriveSpeed;
-      leftDriveSpeed = rightDriveSpeed;
-      rightDriveSpeed = holder;
-    
-      /*
-        To reverse direction, make the motor speeds negative
-      */
-      if (reverseDirection) {
-        leftDriveSpeed *= -1;
-        rightDriveSpeed *= -1;
+      if(xJoy * -1 >= 0 && abs(xJoy) >= abs(yJoy)){
+        leftDriveSpeed = Math.round(abs(xJoy) * 255) - rightDriveSpeed;
+        rightDriveSpeed = Math.round(abs(xJoy) * 255) + rightDriveSpeed;
+        if(rightDriveSpeed > 255)
+          rightDriveSpeed = 255;
+      }else if(xJoy * -1 <= 0 && abs(xJoy) >= abs(yJoy)){
+        leftDriveSpeed = Math.round(abs(xJoy) * 255) + leftDriveSpeed;
+        rightDriveSpeed = Math.round(abs(xJoy) * 255) - leftDriveSpeed;
+        if(leftDriveSpeed > 255)
+          leftDriveSpeed = 255;
       }
-    }
-    avrMotor = abs(leftDriveSpeed) + abs(rightDriveSpeed);
-    avrMotor = avrMotor / 2;
+  }
+  avrMotor = abs(leftDriveSpeed) + abs(rightDriveSpeed);
+  avrMotor = avrMotor / 2;
 }
 
 
