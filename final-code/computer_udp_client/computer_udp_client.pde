@@ -22,7 +22,7 @@ This means we write functions with side effects!!!
 (I.e. they change global variables)
 */
 
-//import hypermedia.net.*;    // For networking
+import hypermedia.net.*;    // For networking
 import java.nio.ByteBuffer; // Used for packet building
 import java.util.Arrays; 
 
@@ -101,14 +101,14 @@ int shovelServoAngle = 0; // 0-360
 int visionPanAngle = 180;   // 0-360
 int visionTiltAngle = 180;  // 0-360
 
-/*
+
 //
 // Networking Globals 
 UDP udpClient;
 final String NODE_IP = "192.168.4.1";
 // port constant needs to match on the cpp side
 final int NODE_PORT = 6969; // Haha funny number
-*/
+
 
 
 
@@ -129,12 +129,12 @@ void setup() {
   initializeController();  // Order here matters
 
   
-  /*
+  
   // Networking
   frameRate(50); // 50 packets (draw calls) / second
   udpClient = new UDP(this, NODE_PORT);
   udpClient.log(true);  // Verbose output, helpful but not necessary
-  */
+  
 
 
 
@@ -144,7 +144,10 @@ void setup() {
 }
 
 void draw ( ) {
-  background(186, 252, 3); // This should really go into GUI
+  if(!cruiseControl)
+    background(186, 252, 3); // This should really go into GUI
+  else
+    background(115, 187, 255);
   
   initializeControllerReaders();
   readControllerInputs();
@@ -462,29 +465,6 @@ void calculateMotorSpeeds () {
         rightDriveSpeed *= -1;
       }
     }
-
-
-
-  /*
-     Vision Logic
-     ------------
-
-
-
-   */
-
-
-
-
-
-  /*
-     Pickup Logic
-     ------------
-
-
-
-   */
-
 }
 
 
@@ -494,7 +474,7 @@ void calculateMotorSpeeds () {
 //
 // Networking Methods
 //
-/*
+
 void sendPacket () {
   ByteBuffer packet = ByteBuffer.allocate(10); // 10 bytes long
 
@@ -506,4 +486,3 @@ void sendPacket () {
 
   udpClient.send(packet.array(), NODE_IP, NODE_PORT);
 }
-*/
