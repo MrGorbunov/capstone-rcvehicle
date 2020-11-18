@@ -71,7 +71,7 @@ void transitionSetup() {
   // Networking
   frameRate(50); // 50 packets (draw calls) / second
   udpClient = new UDP(this, NODE_PORT);
-  udpClient.log(false);  // Verbose output, helpful but not necessary
+  udpClient.log(true);  // Verbose output, helpful but not necessary
 
   // GUI setup
   initializeGUI();
@@ -112,10 +112,11 @@ void normalLoop() {
 void readKeyPresses () {
   if ((key != previousKey) || (keyPressed && firstFrame)) {
     // TODO: Make this a switch statement
-    if (key == BACKSPACE)
-      ipBuilder.deleteCharAt(ipBuilder.length() - 1); 
+    if (key == BACKSPACE) {
+      if (ipBuilder.length() > 0)
+        ipBuilder.deleteCharAt(ipBuilder.length() - 1); 
     
-    else if (key == ENTER) {
+    } else if (key == ENTER) {
       NODE_IP = ipBuilder.toString();
       transitionSetup();
       gatheringIP = false;
