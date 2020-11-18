@@ -69,7 +69,6 @@ void draw ( ) {
   background(10);
 
   // Value updating is handled by GUI
-
   sendPacket();
 }
 

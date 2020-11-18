@@ -5,15 +5,10 @@ Demo Code
 
 This code:
 1 - Reads processing inputs
-2 - Sends packets over UDP to the NodeMCU
-
-At a high level the main loop looks like this:
+2 - Sends packets over the internet to the server
 */
 
-import hypermedia.net.*;    // For networking
-import java.nio.ByteBuffer; // Used for packet building
-import java.util.Arrays; 
-
+import processing.net.*;   // Networking
 import controlP5.*;        // GUI Library
 
 
@@ -38,18 +33,19 @@ int visionTiltAngle = 0;  // 0-180
 
 //
 // Networking Globals 
-UDP udpClient;
+Client c;
 // This is literally my home IP, so it's taken at runtime
-String NODE_IP; 
+String SERVER_IP; 
 // port constant needs to match on the cpp side
-final int NODE_PORT = 12345;
+final int SERVER_PORT = 6969;
 
 // Used for user input gathering
-boolean gatheringIP = true;
 boolean firstFrame = true;
 char previousKey = 'a';
 StringBuilder ipBuilder = new StringBuilder();
 
+boolean gatheringIP = true;
+boolean waitingForResponse = true;
 
 
 
@@ -64,40 +60,53 @@ void setup() {
   size(1000,  1000);
   background(0);
 
+  frameRate(50); // 50 packets (draw calls) / second
+
   previousKey = key;
 }
 
-void transitionSetup() {
-  // Networking
-  frameRate(50); // 50 packets (draw calls) / second
-  udpClient = new UDP(this, NODE_PORT);
-  udpClient.log(true);  // Verbose output, helpful but not necessary
+void transitionToWait() {
+  c = new Client(this, SERVER_IP, SERVER_PORT);
+}
 
-  // GUI setup
+void transitionToNormal() {
   initializeGUI();
 }
 
+
+
 void draw() {
-  if (gatheringIP) {
+  if (gatheringIP)
      gatherIPLoop();
-  } else {
+  else if (waitingForResponse)
+     waitForResponseLoop();
+  else
      normalLoop(); 
-  }
 }
 
 void gatherIPLoop() {
   readKeyPresses();
 
-  background(0);
+  background(50, 50, 100);
   textSize(50);
   text(ipBuilder.toString(), 10, 200);
+}
+
+void waitForResponseLoop() {
+  background(100);
+
+  sendPacket();
+
+  if (c.available() > 0) {
+    waitingForResponse = false;
+    transitionToNormal();
+  }
 }
 
 void normalLoop() {
   background(10);
 
   // Value updating is handled by GUI
-
   sendPacket();
 }
 
@@ -111,14 +120,13 @@ void normalLoop() {
 
 void readKeyPresses () {
   if ((key != previousKey) || (keyPressed && firstFrame)) {
-    // TODO: Make this a switch statement
     if (key == BACKSPACE) {
       if (ipBuilder.length() > 0)
         ipBuilder.deleteCharAt(ipBuilder.length() - 1); 
     
     } else if (key == ENTER) {
-      NODE_IP = ipBuilder.toString();
-      transitionSetup();
+      transitionToWait();
+      SERVER_IP = ipBuilder.toString();
       gatheringIP = false;
       
     } else
@@ -129,17 +137,9 @@ void readKeyPresses () {
 }
 
 void sendPacket () {
-  ByteBuffer packet = ByteBuffer.allocate(10); // 10 bytes long
-
-  packet.putShort((short) ( constrain(leftDriveSpeed, -255, 255) + 255));  // drive speeds are from -255 to 255, but 
-  packet.putShort((short) ( constrain(rightDriveSpeed, -255, 255) + 255)); // sending negatives in packets is a pain
-  packet.putShort((short) (shovelServoAngle % 361));                        // so the esp code does - 255 of what it recieves
-  packet.putShort((short) (visionPanAngle % 361));
-  packet.putShort((short) (visionTiltAngle % 361));
-
-  udpClient.send(packet.array(), NODE_IP, NODE_PORT);
-
-  // System.out.println("Sent packet: " + shovelServoAngle);
+  // Value sanitization happens on the server
+  // (still wouldn't hurt to do it here too)
+  c.write(leftDriveSpeed + "," + rightDriveSpeed + "," + shovelServoAngle + "," + visionPanAngle + "," + visionTiltAngle + "\n");
 }
 
 
@@ -186,4 +186,3 @@ void initializeGUI () {
     .setPosition(600, 80)
     .setSize(100, 800);
 }
-
