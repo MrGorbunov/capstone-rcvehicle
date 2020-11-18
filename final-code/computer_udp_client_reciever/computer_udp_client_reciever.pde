@@ -21,7 +21,7 @@ with using globals (maybe 40 vars max).
 This means we write functions with side effects!!! 
 (I.e. they change global variables)
 */
-
+import processing.net.*;
 import hypermedia.net.*;    // For networking
 import java.nio.ByteBuffer; // Used for packet building
 import java.util.Arrays; 
@@ -56,6 +56,7 @@ Knob averageMotorKnob;
 Knob pickupKnob;
 Slider mirrorPanSlider;
 Slider mirrorTiltSlider;
+Toggle virtualControlToggle;
 
 SoundFile BOOTUP;         // Sounds get loaded in setup
 SoundFile GOINGFORWARD;   
@@ -107,13 +108,13 @@ float visionTiltAngle = 90;  // 0-180
 //
 // Networking Globals 
 UDP udpClient;
+Client remoteControl;
 final String NODE_IP = "192.168.4.1";
 // port constant needs to match on the cpp side
 final int NODE_PORT = 6969; // Haha funny number
-
-
-
-
+float virtualControl;
+String input;
+int data[];
 
 //
 // Main Loops
@@ -125,7 +126,7 @@ void setup() {
   myPort.bufferUntil( '\n' );
 
   // Initial call sets up the screen
-  size(500,  500);
+  size(600,  500);
   initalizeGui();
   initializeSounds();
   initializeController();  // Order here matters
@@ -134,23 +135,36 @@ void setup() {
   frameRate(50); // 50 packets (draw calls) / second
   udpClient = new UDP(this, NODE_PORT);
   udpClient.log(true);  // Verbose output, helpful but not necessary
+  remoteControl = new Client(this, "127.0.0.1", 12345); // Replace with your server's IP and port
 
   // Finally, play sound and get things started
   BOOTUP.play();
 }
 
 void draw ( ) {
-  if(!cruiseControl)
-    background(186, 252, 3); // This should really go into GUI
-  else
-    background(115, 187, 255);
-  
-  initializeControllerReaders();
-  readControllerInputs();
-  calculateMotorSpeeds();
-  //sendPacket();
-  // GUI needs a re-write because of how this is working
-  updateGui();
+  if(virtualControl == 0.0){
+    if(!cruiseControl)
+      background(186, 252, 3); // This should really go into GUI
+    else
+      background(115, 187, 255);
+    
+    initializeControllerReaders();
+    readControllerInputs();
+    calculateMotorSpeeds();
+    //sendPacket();
+    // GUI needs a re-write because of how this is working
+    updateGui();
+  }
+  else {
+    virtualControl();
+    if(!cruiseControl)
+      background(186, 252, 3); // This should really go into GUI
+    else
+      background(115, 187, 255);
+    calculateMotorSpeeds();
+    //sendPacket();
+    updateGui();
+  }
 }
 
 
@@ -189,11 +203,20 @@ void initalizeGui() {
     .moveTo(g3)
     ;
     
+  // Switch for remote control
+  virtualControlToggle = cp5.addToggle("Remote Control")
+     .setPosition(175,30)
+     .setSize(50,20)
+     .setValue(false)
+     .setMode(ControlP5.SWITCH)
+     .moveTo(g3)
+     ;
+    
   // Shows the value of the Right Motor
   rightMotorKnob = cp5.addKnob("Right Motor Speed")
     .setRange(0,255)
     .setValue(0)
-    .setPosition(170,10)
+    .setPosition(270,10)
     .setRadius(50)
     .setDragDirection(Knob.VERTICAL)
     .moveTo(g3)
@@ -203,7 +226,7 @@ void initalizeGui() {
   averageMotorKnob = cp5.addKnob("Average Motor Speed")
     .setRange(0,255)
     .setValue(0)
-    .setPosition(100, 130)
+    .setPosition(150, 130)
     .setRadius(50)
     .setDragDirection(Knob.VERTICAL)
     .moveTo(g3)
@@ -213,7 +236,7 @@ void initalizeGui() {
   pickupKnob = cp5.addKnob("Pickup Level")
     .setRange(0,180)
     .setValue(0)
-    .setPosition(100, 250)
+    .setPosition(150, 250)
     .setRadius(50)
     .setDragDirection(Knob.VERTICAL)
     .moveTo(g3)
@@ -221,7 +244,7 @@ void initalizeGui() {
   
   // Shows the pan angle value
   mirrorPanSlider = cp5.addSlider("Mirror Pan Value")
-    .setSize(200, 20)
+    .setSize(300, 20)
     .setRange(0, 180)
     .setValue(0)
     .setPosition(13, 390)
@@ -230,7 +253,7 @@ void initalizeGui() {
     
   // Shows the tilt angle value
   mirrorTiltSlider = cp5.addSlider("Mirror Tilt Value")
-    .setSize(200, 20)
+    .setSize(300, 20)
     .setRange(0, 180)
     .setValue(0)
     .setPosition(13, 420)
@@ -240,7 +263,7 @@ void initalizeGui() {
   // Allows Menu to Be Collapsed
   accordion = cp5.addAccordion("acc")
                  .setPosition(100,0)
-                 .setWidth(300)
+                 .setWidth(400)
                  .addItem(g3)
                  ;
                  
@@ -261,10 +284,11 @@ void initalizeGui() {
 void updateGui(){
   leftMotorKnob.setValue(leftDriveSpeed);
   rightMotorKnob.setValue(rightDriveSpeed);
-  averageMotorKnob.setValue((abs(leftDriveSpeed)+abs(rightDriveSpeed))/2);
+  averageMotorKnob.setValue(avrMotor);
   pickupKnob.setValue(shovelServoAngle);
   mirrorPanSlider.setValue(visionPanAngle);
   mirrorTiltSlider.setValue(visionTiltAngle);
+  virtualControl = virtualControlToggle.getValue();
 }
 
 
@@ -360,11 +384,7 @@ void readControllerInputs () {
 
   //
   if(rBumper.pressed()){
-    if(cruiseControl)
-      cruiseControl = false;
-    else{
-      cruiseControl = true;
-    }
+    cruiseControl = !cruiseControl;
   }
   if(!cruiseControl){
     if(-0.1 <= yJoy && 0.1 >= yJoy)
@@ -383,19 +403,23 @@ void readControllerInputs () {
   // Vision Control
   if(dPad.left()){
     visionPanAngle -= 2.5;
+    delay(100);
     if(visionPanAngle <= 0)
       visionPanAngle = 0;
   }else if(dPad.right()){
     visionPanAngle += 2.5;
+    delay(100);
     if(visionPanAngle >= 180)
       visionPanAngle = 180;
   }
   else if(dPad.up()){
     visionTiltAngle -= 2.5;
+    delay(100);
     if(visionTiltAngle <= 0)
       visionTiltAngle = 0;
   }else if(dPad.down()){
     visionTiltAngle += 2.5;
+    delay(100);
     if(visionTiltAngle >= 180)
       visionTiltAngle = 180;
   }
@@ -455,11 +479,25 @@ void calculateMotorSpeeds () {
           leftDriveSpeed = 255;
       }
   }
-  avrMotor = abs(leftDriveSpeed) + abs(rightDriveSpeed);
-  avrMotor = avrMotor / 2;
+  avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/ 2;
 }
 
-
+// Virtual Control
+void virtualControl(){
+  if(virtualControl == 1.0){
+    if (remoteControl.available() > 0) {
+      input = remoteControl.readString();
+      input = input.substring(0, input.indexOf("\n"));
+      data = int(split(input, ' ')); // Split values into an array
+      leftDriveSpeed = data[0];
+      rightDriveSpeed = data[1];
+      shovelServoAngle = data[2];
+      visionPanAngle = data[3];
+      visionTiltAngle = data[4];
+      avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/2;
+    }
+  }
+}
 
 
 
