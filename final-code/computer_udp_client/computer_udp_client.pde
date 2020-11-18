@@ -76,16 +76,11 @@ ControlHat dPad;
 
 float xJoy;
 float yJoy;
-
 float triggers;
-
-
-
 
 //
 // Drive Logic Globals
 final double MAX_SPEED = 255; // Gets multiplied by nums on -1 to 1
-
 double joyMagnitude = 0;
 double joyXAmount = 0;
 boolean spinningInPlace = false;
@@ -97,9 +92,10 @@ boolean cruiseControl = false;
 int leftDriveSpeed = 0;   // 0-255
 int rightDriveSpeed = 0;  // 0-255
 int shovelServoAngle = 0; // 0-360
+float avrMotor = 0;
 // Pan is side to side, tilt is up & down
-int visionPanAngle = 180;   // 0-360
-int visionTiltAngle = 180;  // 0-360
+int visionPanAngle = 90;   // 0-180
+int visionTiltAngle = 90;  // 0-180
 
 
 //
@@ -127,16 +123,11 @@ void setup() {
   gui(0, 0, 0, 0, 0);
   initializeSounds();
   initializeController();  // Order here matters
-
-  
   
   // Networking
   frameRate(50); // 50 packets (draw calls) / second
   udpClient = new UDP(this, NODE_PORT);
   udpClient.log(true);  // Verbose output, helpful but not necessary
-  
-
-
 
   // Finally, play sound and get things started
   BOOTUP.play();
@@ -153,7 +144,6 @@ void draw ( ) {
   readControllerInputs();
   calculateMotorSpeeds();
   //sendPacket();
-
   // GUI needs a re-write because of how this is working
   gui(leftDriveSpeed, rightDriveSpeed, shovelServoAngle, visionPanAngle, visionTiltAngle);
 }
@@ -204,11 +194,21 @@ void gui(int leftMotor, int rightMotor, int pickup, int panAngle, int tiltAngle)
     .moveTo(g3)
     ;
   
+  // Shows the value of the average motors
+  cp5.addKnob("Average Motor Speed")
+    .setRange(0,255)
+    .setValue((abs(leftDriveSpeed)+ abs(rightDriveSpeed))/2)
+    .setPosition(100, 130)
+    .setRadius(50)
+    .setDragDirection(Knob.VERTICAL)
+    .moveTo(g3)
+    ;
+  
   // Shows the value of the Pickup Level
   cp5.addKnob("Pickup Level")
-    .setRange(0,360)
+    .setRange(0,180)
     .setValue(pickup)
-    .setPosition(100,130)
+    .setPosition(100, 250)
     .setRadius(50)
     .setDragDirection(Knob.VERTICAL)
     .moveTo(g3)
@@ -217,18 +217,18 @@ void gui(int leftMotor, int rightMotor, int pickup, int panAngle, int tiltAngle)
   // Shows the pan angle value
   cp5.addSlider("Mirror Pan Value")
     .setSize(200, 20)
-    .setRange(0, 360)
+    .setRange(0, 180)
     .setValue(panAngle)
-    .setPosition(13, 260)
+    .setPosition(13, 390)
     .moveTo(g3)
     ;
     
   // Shows the tilt angle value
   cp5.addSlider("Mirror Tilt Value")
     .setSize(200, 20)
-    .setRange(0, 360)
+    .setRange(0, 180)
     .setValue(tiltAngle)
-    .setPosition(13, 290)
+    .setPosition(13, 420)
     .moveTo(g3)
     ;
   
@@ -374,8 +374,8 @@ void readControllerInputs () {
       visionPanAngle = 0;
   }else if(dPad.right()){
     visionPanAngle += 5;
-    if(visionPanAngle >= 360)
-      visionPanAngle = 360;
+    if(visionPanAngle >= 180)
+      visionPanAngle = 180;
   }
   else if(dPad.up()){
     visionTiltAngle -= 5;
@@ -383,8 +383,8 @@ void readControllerInputs () {
       visionTiltAngle = 0;
   }else if(dPad.down()){
     visionTiltAngle += 5;
-    if(visionTiltAngle >= 360)
-      visionTiltAngle = 360;
+    if(visionTiltAngle >= 180)
+      visionTiltAngle = 180;
   }
 
 
@@ -392,11 +392,11 @@ void readControllerInputs () {
   // Pickup Mechanism
   
   if(-0.1 <= triggers && 0.1 >= triggers)
-    shovelServoAngle = 180;
+    shovelServoAngle = 90;
   else if(triggers > 0.1)
     shovelServoAngle = 0;
   else
-    shovelServoAngle = 360;
+    shovelServoAngle = 180;
 }
 
 
@@ -465,6 +465,8 @@ void calculateMotorSpeeds () {
         rightDriveSpeed *= -1;
       }
     }
+    avrMotor = abs(leftDriveSpeed) + abs(rightDriveSpeed);
+    avrMotor = avrMotor / 2;
 }
 
 
@@ -474,7 +476,7 @@ void calculateMotorSpeeds () {
 //
 // Networking Methods
 //
-
+/*
 void sendPacket () {
   ByteBuffer packet = ByteBuffer.allocate(10); // 10 bytes long
 
@@ -486,3 +488,4 @@ void sendPacket () {
 
   udpClient.send(packet.array(), NODE_IP, NODE_PORT);
 }
+*/
