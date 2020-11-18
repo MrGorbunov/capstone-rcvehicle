@@ -21,6 +21,7 @@ with using globals (maybe 40 vars max).
 This means we write functions with side effects!!! 
 (I.e. they change global variables)
 */
+
 import processing.net.*;
 import hypermedia.net.*;    // For networking
 import java.nio.ByteBuffer; // Used for packet building
@@ -104,17 +105,13 @@ float avrMotor = 0;
 float visionPanAngle = 90;   // 0-180
 float visionTiltAngle = 90;  // 0-180
 
-
-//
-// Networking Globals 
-UDP udpClient;
+// Networking Globals
 Client remoteControl;
-final String NODE_IP = "192.168.4.1";
-// port constant needs to match on the cpp side
-final int NODE_PORT = 6969; // Haha funny number
 float virtualControl;
 String input;
-int data[];
+String data[];
+String status;
+
 
 //
 // Main Loops
@@ -133,8 +130,6 @@ void setup() {
   
   // Networking
   frameRate(50); // 50 packets (draw calls) / second
-  udpClient = new UDP(this, NODE_PORT);
-  udpClient.log(true);  // Verbose output, helpful but not necessary
   remoteControl = new Client(this, "127.0.0.1", 12345); // Replace with your server's IP and port
 
   // Finally, play sound and get things started
@@ -151,7 +146,6 @@ void draw ( ) {
     initializeControllerReaders();
     readControllerInputs();
     calculateMotorSpeeds();
-    //sendPacket();
     // GUI needs a re-write because of how this is working
     updateGui();
   }
@@ -162,14 +156,9 @@ void draw ( ) {
     else
       background(115, 187, 255);
     calculateMotorSpeeds();
-    //sendPacket();
     updateGui();
   }
 }
-
-
-
-
 
 //
 // GUI Methods
@@ -484,38 +473,21 @@ void calculateMotorSpeeds () {
 
 // Virtual Control
 void virtualControl(){
-  if(virtualControl == 1.0){
-    if (remoteControl.available() > 0) {
-      input = remoteControl.readString();
-      input = input.substring(0, input.indexOf("\n"));
-      data = int(split(input, ' ')); // Split values into an array
-      leftDriveSpeed = data[0];
-      rightDriveSpeed = data[1];
-      shovelServoAngle = data[2];
-      visionPanAngle = data[3];
-      visionTiltAngle = data[4];
-      avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/2;
-    }
+  if (remoteControl.available() > 0) {
+    input = remoteControl.readString();
+    input = input.substring(0, input.indexOf("\n"));
+    data = split(input, ' '); // Split values into an array
+    status = data[0];
+  }
+  if(status == "Online"){
+    String message = leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + "\n" ;
+    remoteControl.write(message);
   }else{
-    remoteControl.write("Online" + ' ' + leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + "\n");
+    leftDriveSpeed = int(data[1]);
+    rightDriveSpeed = int(data[2]);
+    shovelServoAngle = int(data[3]);
+    visionPanAngle = int(data[4]);
+    visionTiltAngle = int(data[5]);
+    avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/2;
   }
 }
-
-
-
-//
-// Networking Methods
-//
-/*
-void sendPacket () {
-  ByteBuffer packet = ByteBuffer.allocate(10); // 10 bytes long
-
-  packet.putShort((short) ( constrain(leftDriveSpeed, -255, 255) ));  // drive speeds are from -255 to 255,
-  packet.putShort((short) ( constrain(rightDriveSpeed, -255, 255) )); // so we can't just modulo
-  packet.putShort((short) (shovelServoAngle % 361));
-  packet.putShort((short) (visionPanAngle % 361));
-  packet.putShort((short) (visionTiltAngle % 361));
-
-  udpClient.send(packet.array(), NODE_IP, NODE_PORT);
-}
-*/
