@@ -308,9 +308,9 @@ void draw ( ) {
     background (225, 0, 225);
     cruiseControl = 0;
   }
-  sendPacket();
+  //sendPacket();
 }
-
+/*
 // Networking Methods
 void sendPacket () {
   ByteBuffer packet = ByteBuffer.allocate(10); // 10 bytes long
@@ -323,3 +323,4 @@ void sendPacket () {
   
   udpClient.send(packet.array(), NODE_IP, NODE_PORT);
 }
+*/

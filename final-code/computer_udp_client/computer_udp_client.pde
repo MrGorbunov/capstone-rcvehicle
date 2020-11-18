@@ -22,7 +22,7 @@ This means we write functions with side effects!!!
 (I.e. they change global variables)
 */
 
-import hypermedia.net.*;    // For networking
+//import hypermedia.net.*;    // For networking
 import java.nio.ByteBuffer; // Used for packet building
 import java.util.Arrays; 
 
@@ -72,10 +72,12 @@ ControlButton aButton;
 ControlButton lBumper;
 ControlButton rBumper;
 
-ControlSlider xJoy;
-ControlSlider yJoy;
+ControlHat dPad;
 
-ControlSlider triggers;
+float xJoy;
+float yJoy;
+
+float triggers;
 
 
 
@@ -88,6 +90,7 @@ double joyMagnitude = 0;
 double joyXAmount = 0;
 boolean spinningInPlace = false;
 boolean reverseDirection = false;
+boolean cruiseControl = false;
 
 // Actual motor speeds
 // _these get sent wirelessly to the esp_
@@ -95,17 +98,17 @@ int leftDriveSpeed = 0;   // 0-255
 int rightDriveSpeed = 0;  // 0-255
 int shovelServoAngle = 0; // 0-360
 // Pan is side to side, tilt is up & down
-int visionPanAngle = 0;   // 0-360
-int visionTiltAngle = 0;  // 0-360
+int visionPanAngle = 180;   // 0-360
+int visionTiltAngle = 180;  // 0-360
 
-
+/*
 //
 // Networking Globals 
 UDP udpClient;
 final String NODE_IP = "192.168.4.1";
 // port constant needs to match on the cpp side
 final int NODE_PORT = 6969; // Haha funny number
-
+*/
 
 
 
@@ -121,16 +124,17 @@ void setup() {
 
   // Initial call sets up the screen
   size(500,  500);
-  gui(0, 0, 0, 0);
+  gui(0, 0, 0, 0, 0);
   initializeSounds();
-
   initializeController();  // Order here matters
-  initializeControllerReaders();
+
   
+  /*
   // Networking
   frameRate(50); // 50 packets (draw calls) / second
   udpClient = new UDP(this, NODE_PORT);
   udpClient.log(true);  // Verbose output, helpful but not necessary
+  */
 
 
 
@@ -141,13 +145,14 @@ void setup() {
 
 void draw ( ) {
   background(186, 252, 3); // This should really go into GUI
-
+  
+  initializeControllerReaders();
   readControllerInputs();
   calculateMotorSpeeds();
-  sendPacket();
+  //sendPacket();
 
   // GUI needs a re-write because of how this is working
-  gui(forwardReverse*-1, leftRight *-1, pickup*-1, currentMotorSpeed/255);
+  gui(leftDriveSpeed, rightDriveSpeed, shovelServoAngle, visionPanAngle, visionTiltAngle);
 }
 
 
@@ -167,54 +172,66 @@ void initializeSounds () {
   NEUTRALMODE = new SoundFile(this, "NEUTRALMODE.wav");
 }
 
-void gui(float forwardReverse, float leftRight, float pickup, float currentMotorSpeed) {
+void gui(int leftMotor, int rightMotor, int pickup, int panAngle, int tiltAngle) {
   cp5 = new ControlP5(this);
 
   // group number 3, contains a bang and a slider
-  Group g3 = cp5.addGroup("Controller Information")
+  Group g3 = cp5.addGroup("Drive Information")
                 .setBackgroundColor(color(0, 64))
-                .setBackgroundHeight(150)
+                .setBackgroundHeight(500)
                 ;
   
-  // Shows the value of the Y - Axis| Forward and Reverse Directiom
-  cp5.addSlider("Forward and Reverse")
-     .setPosition(60,20)
-     .setSize(100,20)
-     .setRange(-1,1)
-     .setValue(forwardReverse)
-     .moveTo(g3)
-     ;
-  
-  // Shows the value of the X-Axis| Left and Right Direction
-  cp5.addSlider("Left and Right")
-     .setPosition(60,50)
-     .setSize(100,20)
-     .setRange(-1, 1)
-     .setValue(leftRight)
-     .moveTo(g3)
-     ;
-   
-  // Shows the value of the LT/RT| Pickup Servo Level
-  cp5.addSlider("Pickup")
-    .setPosition(60,80)
-    .setSize(100, 20)
-    .setRange(-1, 1)
-    .setValue(pickup)
+  // Shows the value of the Left Motor
+  cp5.addKnob("Left Motor Speed")
+    .setRange(0,255)
+    .setValue(leftMotor)
+    .setPosition(30,10)
+    .setRadius(50)
+    .setDragDirection(Knob.VERTICAL)
+    .moveTo(g3)
+    ;
+    
+  // Shows the value of the Right Motor
+  cp5.addKnob("Right Motor Speed")
+    .setRange(0,255)
+    .setValue(rightMotor)
+    .setPosition(170,10)
+    .setRadius(50)
+    .setDragDirection(Knob.VERTICAL)
     .moveTo(g3)
     ;
   
-  // Shows the value of the LT/RT| Pickup Servo Level
-  cp5.addSlider("Motor Speed")
-    .setPosition(60,110)
-    .setSize(100, 20)
-    .setRange(0, 1)
-    .setValue(currentMotorSpeed)
+  // Shows the value of the Pickup Level
+  cp5.addKnob("Pickup Level")
+    .setRange(0,360)
+    .setValue(pickup)
+    .setPosition(100,130)
+    .setRadius(50)
+    .setDragDirection(Knob.VERTICAL)
+    .moveTo(g3)
+    ;
+  
+  // Shows the pan angle value
+  cp5.addSlider("Mirror Pan Value")
+    .setSize(200, 20)
+    .setRange(0, 360)
+    .setValue(panAngle)
+    .setPosition(13, 260)
+    .moveTo(g3)
+    ;
+    
+  // Shows the tilt angle value
+  cp5.addSlider("Mirror Tilt Value")
+    .setSize(200, 20)
+    .setRange(0, 360)
+    .setValue(tiltAngle)
+    .setPosition(13, 290)
     .moveTo(g3)
     ;
   
   // Allows Menu to Be Collapsed
   accordion = cp5.addAccordion("acc")
-                 .setPosition(94,125)
+                 .setPosition(100,0)
                  .setWidth(300)
                  .addItem(g3)
                  ;
@@ -248,8 +265,8 @@ void gui(float forwardReverse, float leftRight, float pickup, float currentMotor
 void initializeController () {
   // Find controller
   control = ControlIO.getInstance(this);
-  // Setup reader with settings in file "Xbox Controller Settings"
-  cont = control.getMatchedDevice("Xbox Controller Settings");
+  // Setup reader with settings in file "Wireless Robot Controls"
+  cont = control.getMatchedDevice("Wireless Robot Xbox Controls");
   
   if (cont == null) {
     println("Error connecting with controller");
@@ -294,23 +311,20 @@ void initializeControllerReaders () {
     values (ex: 0.6).
   */
 
-  yButton = cont.getButton("YButton");
-  xButton = cont.getButton("XButton");
-  bButton = cont.getButton("BButton");
-  aButton = cont.getButton("AButton");
+  yButton = cont.getButton("YBUTTON");
+  xButton = cont.getButton("XBUTTON");
+  bButton = cont.getButton("BBUTTON");
+  aButton = cont.getButton("ABUTTON");
 
-  lBumper = cont.getButton("LBButton");
-  rBumper = cont.getButton("RBButton");
+  lBumper = cont.getButton("LBUMPER");
+  rBumper = cont.getButton("RBUMPER");
+  
+  dPad = cont.getHat("MIRRORANGLE");
 
-  xJoy = cont.getSlider("XAxis");
-  yJoy = cont.getSlider("YAxis");
+  xJoy = cont.getSlider("XAXIS2").getValue();
+  yJoy = cont.getSlider("YAXIS1").getValue();
 
-  triggers = cont.getSlider("ZAxis");
-
-  // This means that values on -0.1 to 0.1 are read in as 0s
-  xJoy.setTolerance(0.1);
-  yJoy.setTolerance(0.1);
-  triggers.setTolerance(0.1);
+  triggers = cont.getSlider("TRIGGERS").getValue();
 }
 
 
@@ -328,25 +342,58 @@ void readControllerInputs () {
   */
 
   //
-  // Drive Logic
-  double joyX = xJoy.getValue();
-  double joyY = yJoy.getValue();
-
-  if (joyY <= 0)
-    spinningInPlace = true;
-  joyXAmount = joyX;
-  joyMagnitude = sqrt((float) (joyX*joyX + joyY*joyY));
-  reverseDirection = aButton.pressed();
+  if(rBumper.pressed()){
+    if(cruiseControl)
+      cruiseControl = false;
+    else{
+      cruiseControl = true;
+    }
+  }
+  if(!cruiseControl){
+    if(-0.1 <= yJoy && 0.1 >= yJoy)
+      yJoy = 0;
+    if(-0.1 <= xJoy && 0.1 >= xJoy)
+      xJoy = 0;
+    
+    if (yJoy <= 0)
+      spinningInPlace = true;
+    joyXAmount = xJoy;
+    joyMagnitude = sqrt((float) (xJoy*xJoy + yJoy*yJoy));
+    reverseDirection = aButton.pressed();
+  }
 
   // And imma leave everything else to you Aryan <3
   //
   // Vision Control
-
+  if(dPad.left()){
+    visionPanAngle -= 5;
+    if(visionPanAngle <= 0)
+      visionPanAngle = 0;
+  }else if(dPad.right()){
+    visionPanAngle += 5;
+    if(visionPanAngle >= 360)
+      visionPanAngle = 360;
+  }
+  else if(dPad.up()){
+    visionTiltAngle -= 5;
+    if(visionTiltAngle <= 0)
+      visionTiltAngle = 0;
+  }else if(dPad.down()){
+    visionTiltAngle += 5;
+    if(visionTiltAngle >= 360)
+      visionTiltAngle = 360;
+  }
 
 
   //
   // Pickup Mechanism
-
+  
+  if(-0.1 <= triggers && 0.1 >= triggers)
+    shovelServoAngle = 180;
+  else if(triggers > 0.1)
+    shovelServoAngle = 0;
+  else
+    shovelServoAngle = 360;
 }
 
 
@@ -372,45 +419,49 @@ void calculateMotorSpeeds () {
 
     This allows for fine tuning for turning in place AND for driving forward.
   */
-
-  if (spinningInPlace) {
-    double spinSpeed = joyXAmount;
-    // Parentheses keep the cast as the last operation, prevents rounding errors
-    int motorSpeed = (int) (MAX_SPEED * spinSpeed * joyMagnitude);
-
-    // Spinning in place, so both sides spin opposite each other
-    leftDriveSpeed = motorSpeed;
-    rightDriveSpeed = -motorSpeed;
-
-  } else {
-    /*
-      With this differential drive, the faster motor stays at 
-      a constant speed while the slower motor changes from 
-      speed to -speed, as the turn intensity increases.
-    */
-    double spinAmount = abs((float) joyXAmount);
-    // TODO: Test this mapping
-    double slowerWheelTurnSpeed = map((float) spinAmount, 0f, 1f, (float) MAX_SPEED, (float) -MAX_SPEED);
-
-    boolean clockwise = joyXAmount > 0;
-    double speed = joyMagnitude * MAX_SPEED;
-
-    if (clockwise) {
-      leftDriveSpeed = (int) speed;
-      rightDriveSpeed = (int) slowerWheelTurnSpeed;
-    } else {
-      rightDriveSpeed = (int) speed;
-      leftDriveSpeed = (int) slowerWheelTurnSpeed;
+  if(!cruiseControl){
+      if (spinningInPlace) {
+        double spinSpeed = joyXAmount;
+        // Parentheses keep the cast as the last operation, prevents rounding errors
+        int motorSpeed = (int) (MAX_SPEED * spinSpeed * joyMagnitude);
+    
+        // Spinning in place, so both sides spin opposite each other
+        leftDriveSpeed = motorSpeed;
+        rightDriveSpeed = -motorSpeed;
+    
+      } else {
+        /*
+          With this differential drive, the faster motor stays at 
+          a constant speed while the slower motor changes from 
+          speed to -speed, as the turn intensity increases.
+        */
+        double spinAmount = abs((float) joyXAmount);
+        // TODO: Test this mapping
+        double slowerWheelTurnSpeed = map((float) spinAmount, 0f, 1f, (float) MAX_SPEED, (float) -MAX_SPEED);
+    
+        boolean clockwise = joyXAmount > 0;
+        double speed = joyMagnitude * MAX_SPEED;
+    
+        if (clockwise) {
+          leftDriveSpeed = (int) speed;
+          rightDriveSpeed = (int) slowerWheelTurnSpeed;
+        } else {
+          rightDriveSpeed = (int) speed;
+          leftDriveSpeed = (int) slowerWheelTurnSpeed;
+        }
+      }
+      int holder = leftDriveSpeed;
+      leftDriveSpeed = rightDriveSpeed;
+      rightDriveSpeed = holder;
+    
+      /*
+        To reverse direction, make the motor speeds negative
+      */
+      if (reverseDirection) {
+        leftDriveSpeed *= -1;
+        rightDriveSpeed *= -1;
+      }
     }
-  }
-
-  /*
-    To reverse direction, make the motor speeds negative
-  */
-  if (reverseDirection) {
-    leftDriveSpeed *= -1;
-    rightDriveSpeed *= -1;
-  }
 
 
 
@@ -443,7 +494,7 @@ void calculateMotorSpeeds () {
 //
 // Networking Methods
 //
-
+/*
 void sendPacket () {
   ByteBuffer packet = ByteBuffer.allocate(10); // 10 bytes long
 
@@ -455,3 +506,4 @@ void sendPacket () {
 
   udpClient.send(packet.array(), NODE_IP, NODE_PORT);
 }
+*/
