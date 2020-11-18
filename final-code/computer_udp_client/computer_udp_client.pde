@@ -50,6 +50,12 @@ Serial myPort;
 // GUI & Sound Globals
 ControlP5 cp5;
 Accordion accordion;
+Knob leftMotorKnob;
+Knob rightMotorKnob;
+Knob averageMotorKnob;
+Knob pickupKnob;
+Slider mirrorPanSlider;
+Slider mirrorTiltSlider;
 
 SoundFile BOOTUP;         // Sounds get loaded in setup
 SoundFile GOINGFORWARD;   
@@ -120,7 +126,7 @@ void setup() {
 
   // Initial call sets up the screen
   size(500,  500);
-  gui(0, 0, 0, 0, 0);
+  initalizeGui();
   initializeSounds();
   initializeController();  // Order here matters
   
@@ -145,7 +151,7 @@ void draw ( ) {
   calculateMotorSpeeds();
   //sendPacket();
   // GUI needs a re-write because of how this is working
-  gui(leftDriveSpeed, rightDriveSpeed, shovelServoAngle, visionPanAngle, visionTiltAngle);
+  updateGui();
 }
 
 
@@ -165,7 +171,7 @@ void initializeSounds () {
   NEUTRALMODE = new SoundFile(this, "NEUTRALMODE.wav");
 }
 
-void gui(int leftMotor, int rightMotor, int pickup, int panAngle, int tiltAngle) {
+void initalizeGui() {
   cp5 = new ControlP5(this);
 
   // group number 3, contains a bang and a slider
@@ -175,9 +181,9 @@ void gui(int leftMotor, int rightMotor, int pickup, int panAngle, int tiltAngle)
                 ;
   
   // Shows the value of the Left Motor
-  cp5.addKnob("Left Motor Speed")
+  leftMotorKnob = cp5.addKnob("Left Motor Speed")
     .setRange(0,255)
-    .setValue(leftMotor)
+    .setValue(0)
     .setPosition(30,10)
     .setRadius(50)
     .setDragDirection(Knob.VERTICAL)
@@ -185,9 +191,9 @@ void gui(int leftMotor, int rightMotor, int pickup, int panAngle, int tiltAngle)
     ;
     
   // Shows the value of the Right Motor
-  cp5.addKnob("Right Motor Speed")
+  rightMotorKnob = cp5.addKnob("Right Motor Speed")
     .setRange(0,255)
-    .setValue(rightMotor)
+    .setValue(0)
     .setPosition(170,10)
     .setRadius(50)
     .setDragDirection(Knob.VERTICAL)
@@ -195,9 +201,9 @@ void gui(int leftMotor, int rightMotor, int pickup, int panAngle, int tiltAngle)
     ;
   
   // Shows the value of the average motors
-  cp5.addKnob("Average Motor Speed")
+  averageMotorKnob = cp5.addKnob("Average Motor Speed")
     .setRange(0,255)
-    .setValue((abs(leftDriveSpeed)+ abs(rightDriveSpeed))/2)
+    .setValue(0)
     .setPosition(100, 130)
     .setRadius(50)
     .setDragDirection(Knob.VERTICAL)
@@ -205,9 +211,9 @@ void gui(int leftMotor, int rightMotor, int pickup, int panAngle, int tiltAngle)
     ;
   
   // Shows the value of the Pickup Level
-  cp5.addKnob("Pickup Level")
+  pickupKnob = cp5.addKnob("Pickup Level")
     .setRange(0,180)
-    .setValue(pickup)
+    .setValue(0)
     .setPosition(100, 250)
     .setRadius(50)
     .setDragDirection(Knob.VERTICAL)
@@ -215,19 +221,19 @@ void gui(int leftMotor, int rightMotor, int pickup, int panAngle, int tiltAngle)
     ;
   
   // Shows the pan angle value
-  cp5.addSlider("Mirror Pan Value")
+  mirrorPanSlider = cp5.addSlider("Mirror Pan Value")
     .setSize(200, 20)
     .setRange(0, 180)
-    .setValue(panAngle)
+    .setValue(0)
     .setPosition(13, 390)
     .moveTo(g3)
     ;
     
   // Shows the tilt angle value
-  cp5.addSlider("Mirror Tilt Value")
+  mirrorTiltSlider = cp5.addSlider("Mirror Tilt Value")
     .setSize(200, 20)
     .setRange(0, 180)
-    .setValue(tiltAngle)
+    .setValue(0)
     .setPosition(13, 420)
     .moveTo(g3)
     ;
@@ -251,6 +257,15 @@ void gui(int leftMotor, int rightMotor, int pickup, int panAngle, int tiltAngle)
   // Allows one section to be open at a time
   accordion.open(0,1,2);
   accordion.setCollapseMode(Accordion.SINGLE);
+}
+
+void updateGui(){
+  leftMotorKnob.setValue(leftDriveSpeed);
+  rightMotorKnob.setValue(rightDriveSpeed);
+  averageMotorKnob.setValue((abs(leftDriveSpeed)+abs(rightDriveSpeed))/2);
+  pickupKnob.setValue(shovelServoAngle);
+  mirrorPanSlider.setValue(visionPanAngle);
+  mirrorTiltSlider.setValue(visionTiltAngle);
 }
 
 
