@@ -402,13 +402,13 @@ void readControllerInputs () {
 
   //
   // Pickup Mechanism
-  
-  if(-0.1 <= triggers && 0.1 >= triggers)
-    shovelServoAngle = 90;
-  else if(triggers > 0.1)
-    shovelServoAngle = 0;
+  //
+  // Pickup Mechanism
+  if(triggers >= 0)
+    triggers = triggers + 1;
   else
-    shovelServoAngle = 180;
+    triggers =  1 - abs(triggers);
+  shovelServoAngle = Math.round((180 * triggers) / 2);
 }
 
 
@@ -437,14 +437,14 @@ void calculateMotorSpeeds () {
   if(!cruiseControl){
       leftDriveSpeed = Math.round(abs(yJoy) * 255);
       rightDriveSpeed = Math.round(abs(yJoy) * 255);
-      if(xJoy * -1 >= 0){
+      if(xJoy * -1 >= 0.15){
         leftDriveSpeed -= Math.round(abs(xJoy) * 255);
         rightDriveSpeed += Math.round(abs(xJoy) * 255);
         if(leftDriveSpeed < 0)
           leftDriveSpeed = 0;
         else if(rightDriveSpeed > 255)
           rightDriveSpeed = 255;
-      }else if(xJoy * -1 <= 0){
+      }else if(xJoy * -1 <= -0.15 ){
         leftDriveSpeed += Math.round(abs(xJoy) * 255);
         rightDriveSpeed -= Math.round(abs(xJoy) * 255);
         if(leftDriveSpeed > 255)
