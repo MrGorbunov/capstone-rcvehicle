@@ -111,6 +111,7 @@ float virtualControl;
 String input;
 String data[];
 String status;
+boolean connectionStatus;
 
 
 //
@@ -137,27 +138,22 @@ void setup() {
 }
 
 void draw ( ) {
-  if(virtualControl == 0.0){
-    if(!cruiseControl)
-      background(186, 252, 3); // This should really go into GUI
-    else
-      background(115, 187, 255);
-    
-    initializeControllerReaders();
-    readControllerInputs();
-    calculateMotorSpeeds();
-    // GUI needs a re-write because of how this is working
-    updateGui();
-  }
-  else {
-    virtualControl();
-    if(!cruiseControl)
-      background(186, 252, 3); // This should really go into GUI
-    else
-      background(115, 187, 255);
-    calculateMotorSpeeds();
-    updateGui();
-  }
+   virtualControl();
+   if(connectionStatus){
+     if(!cruiseControl)
+       background(186, 252, 3); // This should really go into GUI
+     else
+       background(115, 187, 255);
+      
+     initializeControllerReaders();
+     readControllerInputs();
+     calculateMotorSpeeds();
+     // GUI needs a re-write because of how this is working
+     updateGui();
+   }else{
+     background(100, 100, 100);
+     updateGui();
+   }
 }
 
 //
@@ -465,20 +461,28 @@ void calculateMotorSpeeds () {
 // Virtual Control
 void virtualControl(){
   if (remoteControl.available() > 0) {
+    println("Reached");
     input = remoteControl.readString();
+    println(input);
     input = input.substring(0, input.indexOf("\n"));
     data = split(input, ' '); // Split values into an array
+    println(data);
+    println(data.length);
     status = data[0];
   }
   if(status == "Online"){
+    connectionStatus = true;
     String message = leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + "\n" ;
     remoteControl.write(message);
   }else{
+    connectionStatus = false;
+    /*
     leftDriveSpeed = int(data[1]);
     rightDriveSpeed = int(data[2]);
     shovelServoAngle = int(data[3]);
     visionPanAngle = int(data[4]);
     visionTiltAngle = int(data[5]);
     avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/2;
+    */
   }
 }
