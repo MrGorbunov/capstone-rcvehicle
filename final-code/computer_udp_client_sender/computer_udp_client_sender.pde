@@ -151,7 +151,6 @@ void draw ( ) {
      // GUI needs a re-write because of how this is working
      updateGui();
    }else{
-     background(100, 100, 100);
      updateGui();
    }
 }
@@ -464,19 +463,18 @@ void virtualControl(){
     input = remoteControl.readString();
     input = input.substring(0, input.indexOf("\n"));
     data = split(input, ' '); // Split values into an array
-    status = data[0];
-    println(status);
+    if(data[5].equals("b")){
+      connectionStatus = false;
+      leftDriveSpeed = int(data[0]);
+      rightDriveSpeed = int(data[1]);
+      shovelServoAngle = int(data[2]);
+      visionPanAngle = int(data[3]);
+      visionTiltAngle = int(data[4]);
+    }
+    else{
+      connectionStatus = true;
+      String msgSend = Integer.toString(leftDriveSpeed) + ' ' + Integer.toString(rightDriveSpeed) + ' ' + Integer.toString(shovelServoAngle) + ' ' + Float.toString(visionPanAngle) + ' '+ Float.toString(visionTiltAngle) + ' ' + "b" + ' ' + "c" + "\n";
+      remoteControl.write(msgSend);
+    }
   }
-  if(status == "Online"){
-    connectionStatus = true;
-    String message = leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + "\n" ;
-    remoteControl.write(message);
-  }else{
-    connectionStatus = false;
-    leftDriveSpeed = int(data[1]);
-    rightDriveSpeed = int(data[2]);
-    shovelServoAngle = int(data[3]);
-    visionPanAngle = int(data[4]);
-    visionTiltAngle = int(data[5]);
-  }
-}
+} 
