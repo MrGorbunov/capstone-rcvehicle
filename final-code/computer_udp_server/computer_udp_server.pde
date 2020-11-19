@@ -11,14 +11,16 @@ int currentLoop = 0;
 boolean recievedSignal = false;
 // Actual motor speeds
 // _these get sent wirelessly to the esp_
-int leftDriveSpeed = 0;   // 0-255
-int rightDriveSpeed = 0;  // 0-255
-int shovelServoAngle = 0; // 0-360
-float avrMotor = 0;
+String status;
+String leftDriveSpeed;   // 0-255S
+String rightDriveSpeed;  // 0-255
+String shovelServoAngle; // 0-360
+String avrMotor;
 // Pan is side to side, tilt is up & down
-float visionPanAngle = 90;   // 0-180
-float visionTiltAngle = 90;  // 0-180
-
+String visionPanAngle;   // 0-180
+String visionTiltAngle;  // 0-180
+String sender;
+String msg;
 void setup(){
   // Initial call sets up the screen
   size(300,  300);
@@ -39,25 +41,42 @@ void readIncomingTraffic () {
   virtualControlClient = virtualControl.available();
   if (virtualControlClient == null) { return; }
 
-  recievedSignal = true;
-
-  String msg = virtualControlClient.readString();
-  println(msg);
-  msg = msg.substring(0, msg.indexOf("\n"));
-  int[] recievedVals = int(split(msg, ' '));
-  println(recievedVals);
-  leftDriveSpeed = recievedVals[0];
-  println(leftDriveSpeed);
-  rightDriveSpeed = recievedVals[1];
-  println(rightDriveSpeed);
-  shovelServoAngle = recievedVals[2];
-  println(shovelServoAngle);
-  visionPanAngle = recievedVals[3];
-  println(visionPanAngle);
-  visionTiltAngle = recievedVals[4];
-  println(visionTiltAngle);
+  if(virtualControlClient != null){
+    recievedSignal = true;
+    msg = virtualControlClient.readString();
+    println(msg);
+    msg = msg.substring(0, msg.indexOf("\n"));
+    String[] recievedVals = split(msg, ' ');
+    println(recievedVals);
+    try{
+      if(recievedVals[6].equals("c")){
+        leftDriveSpeed = recievedVals[0];
+        rightDriveSpeed = recievedVals[1];
+        shovelServoAngle = recievedVals[2];
+        visionPanAngle = recievedVals[3];
+        visionTiltAngle = recievedVals[4];
+        sender = recievedVals[5];
+      }
+    }
+    catch(Exception e){
+      if(recievedVals[0].equals("Sender")){
+        virtualControlClient.write("Sender" + "\n");  
+        sender = "b";
+      }
+    }
+  }
 }
 void sendValue(){
-  String msg = "Online" + ' ' + leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + "\n";
-  virtualControl.write(msg);
+  if(leftDriveSpeed != null){
+    String msgSend;
+    if(sender.equals("a")){
+      msgSend = leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + ' ' + "b" + ' ' + "" + "\n";
+      virtualControl.write(msgSend);
+    }
+    else{
+      msgSend = leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + ' ' + "a" + ' ' + "" + "\n";
+      virtualControl.write(msgSend);
+    }
+    println(msgSend);
+  }
 }

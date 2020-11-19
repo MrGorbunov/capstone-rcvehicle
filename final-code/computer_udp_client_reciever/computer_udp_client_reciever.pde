@@ -114,7 +114,7 @@ final String NODE_IP = "192.168.4.1";
 final int NODE_PORT = 6969; // Haha funny number
 float virtualControl;
 String input;
-int data[];
+String[] data;
 
 //
 // Main Loops
@@ -162,7 +162,6 @@ void draw ( ) {
       background(186, 252, 3); // This should really go into GUI
     else
       background(115, 187, 255);
-    calculateMotorSpeeds();
     //sendPacket();
     updateGui();
   }
@@ -487,20 +486,28 @@ void calculateMotorSpeeds () {
 // Virtual Control
 void virtualControl(){
   if(virtualControl == 1.0){
+    remoteControl.write("Sender" + "\n");
     if (remoteControl.available() > 0) {
       input = remoteControl.readString();
       input = input.substring(0, input.indexOf("\n"));
-      data = int(split(input, ' ')); // Split values into an array
-      leftDriveSpeed = data[0];
-      rightDriveSpeed = data[1];
-      shovelServoAngle = data[2];
-      visionPanAngle = data[3];
-      visionTiltAngle = data[4];
-      avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/2;
+      data = split(input, ' '); // Split values into an array
+    }
+    if(data.length > 1){
+      if(data[5].equals("a")){
+        leftDriveSpeed = int(data[0]);
+        rightDriveSpeed = int(data[1]);
+        shovelServoAngle = int(data[2]);
+        visionPanAngle = int(data[3]);
+        visionTiltAngle = int(data[4]);
+        avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/2;
+      }
     }
   }else{
-    remoteControl.write("Online" + ' ' + leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + "\n");
-  }
+    println("WooHoo");
+    String msgSend = Integer.toString(leftDriveSpeed) + ' ' + Integer.toString(rightDriveSpeed) + ' ' + Integer.toString(shovelServoAngle) + ' ' + Float.toString(visionPanAngle) + ' '+ Float.toString(visionTiltAngle) + ' ' + "a" + ' ' + "c" + "\n";
+    remoteControl.write(msgSend);
+   }
+   println(leftDriveSpeed);
 }
 
 
