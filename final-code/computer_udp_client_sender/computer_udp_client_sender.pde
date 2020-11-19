@@ -130,7 +130,7 @@ void setup() {
   
   // Networking
   frameRate(50); // 50 packets (draw calls) / second
-  remoteControl = new Client(this, "127.0.0.1", 12345); // Replace with your server's IP and port
+  remoteControl = new Client(this, "192.168.86.27", 12345); // Replace with your server's IP and port
 
   // Finally, play sound and get things started
   BOOTUP.play();
