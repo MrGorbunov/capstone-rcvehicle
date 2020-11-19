@@ -119,7 +119,7 @@ String status;
 
 void setup() {
   // Establishes the Serial Communication Connection
-  myPort  =  new Serial (this, "COM5",  9600);
+  myPort  =  new Serial (this, "COM4",  9600);
   myPort.bufferUntil( '\n' );
 
   // Initial call sets up the screen
@@ -191,15 +191,6 @@ void initalizeGui() {
     .setDragDirection(Knob.VERTICAL)
     .moveTo(g3)
     ;
-    
-  // Switch for remote control
-  virtualControlToggle = cp5.addToggle("Remote Control")
-     .setPosition(175,30)
-     .setSize(50,20)
-     .setValue(false)
-     .setMode(ControlP5.SWITCH)
-     .moveTo(g3)
-     ;
     
   // Shows the value of the Right Motor
   rightMotorKnob = cp5.addKnob("Right Motor Speed")
@@ -277,7 +268,6 @@ void updateGui(){
   pickupKnob.setValue(shovelServoAngle);
   mirrorPanSlider.setValue(visionPanAngle);
   mirrorTiltSlider.setValue(visionTiltAngle);
-  virtualControl = virtualControlToggle.getValue();
 }
 
 
