@@ -143,6 +143,7 @@ void setup() {
 
 void draw ( ) {
   if(virtualControl == 0.0){
+    virtualControl();
     if(!cruiseControl)
       background(186, 252, 3); // This should really go into GUI
     else
