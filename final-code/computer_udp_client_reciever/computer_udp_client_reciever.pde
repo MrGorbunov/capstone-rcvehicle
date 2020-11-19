@@ -503,11 +503,9 @@ void virtualControl(){
       }
     }
   }else{
-    println("WooHoo");
     String msgSend = Integer.toString(leftDriveSpeed) + ' ' + Integer.toString(rightDriveSpeed) + ' ' + Integer.toString(shovelServoAngle) + ' ' + Float.toString(visionPanAngle) + ' '+ Float.toString(visionTiltAngle) + ' ' + "a" + ' ' + "c" + "\n";
     remoteControl.write(msgSend);
    }
-   println(leftDriveSpeed);
 }
 
 

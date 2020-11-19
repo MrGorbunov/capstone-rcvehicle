@@ -44,10 +44,8 @@ void readIncomingTraffic () {
   if(virtualControlClient != null){
     recievedSignal = true;
     msg = virtualControlClient.readString();
-    println(msg);
     msg = msg.substring(0, msg.indexOf("\n"));
     String[] recievedVals = split(msg, ' ');
-    println(recievedVals);
     try{
       if(recievedVals[6].equals("c")){
         leftDriveSpeed = recievedVals[0];
@@ -77,6 +75,5 @@ void sendValue(){
       msgSend = leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + ' ' + "a" + ' ' + "" + "\n";
       virtualControl.write(msgSend);
     }
-    println(msgSend);
   }
 }
