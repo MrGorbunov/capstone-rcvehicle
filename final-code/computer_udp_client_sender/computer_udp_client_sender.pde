@@ -463,9 +463,6 @@ void virtualControl(){
     input = remoteControl.readString();
     input = input.substring(0, input.indexOf("\n"));
     data = split(input, ' '); // Split values into an array
-    println(data);
-    println(data[5]);
-    println(data[0]);
     if(data[5].equals("b")){
       connectionStatus = false;
       leftDriveSpeed = int(data[0]);
