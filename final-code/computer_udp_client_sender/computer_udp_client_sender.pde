@@ -461,14 +461,11 @@ void calculateMotorSpeeds () {
 // Virtual Control
 void virtualControl(){
   if (remoteControl.available() > 0) {
-    println("Reached");
     input = remoteControl.readString();
-    println(input);
     input = input.substring(0, input.indexOf("\n"));
     data = split(input, ' '); // Split values into an array
-    println(data);
-    println(data.length);
     status = data[0];
+    println(status);
   }
   if(status == "Online"){
     connectionStatus = true;
@@ -476,13 +473,10 @@ void virtualControl(){
     remoteControl.write(message);
   }else{
     connectionStatus = false;
-    /*
     leftDriveSpeed = int(data[1]);
     rightDriveSpeed = int(data[2]);
     shovelServoAngle = int(data[3]);
     visionPanAngle = int(data[4]);
     visionTiltAngle = int(data[5]);
-    avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/2;
-    */
   }
 }
