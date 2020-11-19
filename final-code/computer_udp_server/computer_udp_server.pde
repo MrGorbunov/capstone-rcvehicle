@@ -33,6 +33,7 @@ void draw(){
     background(150, 50, 50);
   
   readIncomingTraffic();
+  sendValue();
 }
 void readIncomingTraffic () {
   virtualControlClient = virtualControl.available();
@@ -55,4 +56,8 @@ void readIncomingTraffic () {
   println(visionPanAngle);
   visionTiltAngle = recievedVals[4];
   println(visionTiltAngle);
+}
+void sendValue(){
+  String msg = "Online" + ' ' + leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + "\n";
+  virtualControl.write(msg);
 }
