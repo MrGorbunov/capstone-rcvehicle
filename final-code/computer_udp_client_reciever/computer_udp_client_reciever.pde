@@ -89,7 +89,6 @@ float triggers;
 // Drive Logic Globals
 final double MAX_SPEED = 255; // Gets multiplied by nums on -1 to 1
 double joyMagnitude = 0;
-double joyXAmount = 0;
 boolean spinningInPlace = false;
 boolean reverseDirection = false;
 boolean cruiseControl = false;
@@ -384,20 +383,9 @@ void readControllerInputs () {
 
   //
   if(rBumper.pressed()){
+    delay(100);
     cruiseControl = !cruiseControl;
     delay(100);
-  }
-  if(!cruiseControl){
-    if(-0.1 <= yJoy && 0.1 >= yJoy)
-      yJoy = 0;
-    if(-0.1 <= xJoy && 0.1 >= xJoy)
-      xJoy = 0;
-    
-    if (yJoy <= 0)
-      spinningInPlace = true;
-    joyXAmount = xJoy;
-    joyMagnitude = sqrt((float) (xJoy*xJoy + yJoy*yJoy));
-    reverseDirection = aButton.pressed();
   }
 
   //
@@ -461,23 +449,22 @@ void calculateMotorSpeeds () {
     This allows for fine tuning for turning in place AND for driving forward.
   */
   if(!cruiseControl){
-      if(yJoy * -1 >= 0 && abs(yJoy) >= abs(xJoy)){
-        leftDriveSpeed = Math.round(abs(yJoy) * 255);
-        rightDriveSpeed = Math.round(abs(yJoy) * 255);
-      }else if(yJoy * -1 <= 0 && abs(yJoy) >= abs(xJoy)){
-        leftDriveSpeed = Math.round(yJoy * 255);
-        rightDriveSpeed = Math.round(yJoy * 255);
-      }
-      if(xJoy * -1 >= 0 && abs(xJoy) >= abs(yJoy)){
-        leftDriveSpeed = Math.round(abs(xJoy) * 255) - rightDriveSpeed;
-        rightDriveSpeed = Math.round(abs(xJoy) * 255) + rightDriveSpeed;
-        if(rightDriveSpeed > 255)
+      leftDriveSpeed = Math.round(abs(yJoy) * 255);
+      rightDriveSpeed = Math.round(abs(yJoy) * 255);
+      if(xJoy * -1 >= 0){
+        leftDriveSpeed -= Math.round(abs(xJoy) * 255);
+        rightDriveSpeed += Math.round(abs(xJoy) * 255);
+        if(leftDriveSpeed < 0)
+          leftDriveSpeed = 0;
+        else if(rightDriveSpeed > 255)
           rightDriveSpeed = 255;
-      }else if(xJoy * -1 <= 0 && abs(xJoy) >= abs(yJoy)){
-        leftDriveSpeed = Math.round(abs(xJoy) * 255) + leftDriveSpeed;
-        rightDriveSpeed = Math.round(abs(xJoy) * 255) - leftDriveSpeed;
+      }else if(xJoy * -1 <= 0){
+        leftDriveSpeed += Math.round(abs(xJoy) * 255);
+        rightDriveSpeed -= Math.round(abs(xJoy) * 255);
         if(leftDriveSpeed > 255)
           leftDriveSpeed = 255;
+        else if(rightDriveSpeed < 0)
+          rightDriveSpeed = 0;
       }
   }
   avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/ 2;
