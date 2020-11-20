@@ -12,6 +12,8 @@ import processing.net.*;   // Over Internet Networking
 import hypermedia.net.*;   // ESP Networking
 import java.nio.ByteBuffer;// For packet prep
 
+import http.*;             // These 3 for HTTP networking
+import java.util.HashMap;
 
 
 
@@ -31,6 +33,8 @@ int visionTiltAngle = 0;  // 0-180
 UDP udpClient;
 String NODE_IP = "192.168.1.101";
 final int NODE_PORT = 12345;
+
+SimpleHTTPServer httpServer;
 
 Server s;
 Client c;
@@ -58,6 +62,11 @@ void setup() {
 
   frameRate(50); // 50 packets (draw calls) / second
 
+  // HTTP networking
+  httpServer = new SimpleHTTPServer(this);
+  httpServer.serve("bg", "bg.html", "readHTTPTraffic");
+
+  // Processing networking
   udpClient = new UDP(this, NODE_PORT);
   s = new Server(this, SERVER_PORT);
 }
@@ -68,7 +77,8 @@ void draw() {
   else
     background(150, 50, 50);
   
-  readIncomingTraffic();
+  // readHTTPTraffic() is called automatically on new traffic
+  readProcessingTraffic();
   sendToESP();
 
   // Sending a response back
@@ -86,7 +96,22 @@ void draw() {
 // Networking Methods
 //
 
-void readIncomingTraffic () {
+/* NOTE
+ * There are two sources of traffic here:
+ *  - Processing Client network signals
+ *  - HTTP signals from the Github Pages
+ */
+void readHTTPTraffic (String uri, HashMap<String, String> parameterMap) {
+  leftDriveSpeed = Integer.parseInt(parameterMap.get("leftmotorspeed"));
+  rightDriveSpeed = Integer.parseInt(parameterMap.get("rightmotorspeed"));
+  shovelServoAngle = Integer.parseInt(parameterMap.get("shovelservo"));
+  visionPanAngle = Integer.parseInt(parameterMap.get("visionPan"));
+  visionTiltAngle = Integer.parseInt(parameterMap.get("visiontilt"));
+
+  println("Read: " + parameterMap.toString());
+}
+
+void readProcessingTraffic () {
   c = s.available();
   if (c == null) { return; }
 
@@ -96,12 +121,14 @@ void readIncomingTraffic () {
   msg = msg.substring(0, msg.indexOf("\n"));
   int[] recievedVals = int(split(msg, ','));
 
+  if (recievedVals.length != 5)
+    return;
+
   leftDriveSpeed = recievedVals[0];
   rightDriveSpeed = recievedVals[1];
   shovelServoAngle = recievedVals[2];
   visionPanAngle = recievedVals[3];
   visionTiltAngle = recievedVals[4];
-  
 }
 
 void sendToESP () {
@@ -115,8 +142,3 @@ void sendToESP () {
 
   udpClient.send(packet.array(), NODE_IP, NODE_PORT);
 }
-
-
-
-
-
