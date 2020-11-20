@@ -58,6 +58,7 @@ Knob pickupKnob;
 Slider mirrorPanSlider;
 Slider mirrorTiltSlider;
 Toggle virtualControlToggle;
+Textarea driveModeTextArea;
 
 SoundFile BOOTUP;         // Sounds get loaded in setup
 SoundFile GOINGFORWARD;   
@@ -94,6 +95,7 @@ double joyXAmount = 0;
 boolean spinningInPlace = false;
 boolean reverseDirection = false;
 boolean cruiseControl = false;
+int driveMode = 5;
 
 // Actual motor speeds
 // _these get sent wirelessly to the esp_
@@ -197,6 +199,13 @@ void initalizeGui() {
     .moveTo(g3)
     ;
   
+  // Shows Drive Direction
+  driveModeTextArea = cp5.addTextarea("Drive Mode")
+    .setPosition(135, 70)
+    .setSize(130, 20)
+    .moveTo(g3)
+    ;
+  
   // Shows the value of the average motors
   averageMotorKnob = cp5.addKnob("Average Motor Speed")
     .setRange(0,255)
@@ -263,6 +272,14 @@ void updateGui(){
   pickupKnob.setValue(shovelServoAngle);
   mirrorPanSlider.setValue(visionPanAngle);
   mirrorTiltSlider.setValue(visionTiltAngle);
+  if(driveMode == 1)
+    driveModeTextArea.setColorBackground(color(0,255,0));
+  else if(driveMode == 2)
+    driveModeTextArea.setColorBackground(color(255,0, 0));
+  else if(driveMode == 3)
+    driveModeTextArea.setColorBackground(color(0,100, 200));
+  else 
+    driveModeTextArea.setColorBackground(color(255,165,0));
 }
 
 
@@ -361,18 +378,6 @@ void readControllerInputs () {
     cruiseControl = !cruiseControl;
     delay(100);
   }
-  if(!cruiseControl){
-    if(-0.1 <= yJoy && 0.1 >= yJoy)
-      yJoy = 0;
-    if(-0.1 <= xJoy && 0.1 >= xJoy)
-      xJoy = 0;
-    
-    if (yJoy <= 0)
-      spinningInPlace = true;
-    joyXAmount = xJoy;
-    joyMagnitude = sqrt((float) (xJoy*xJoy + yJoy*yJoy));
-    reverseDirection = aButton.pressed();
-  }
 
   //
   // Vision Control
@@ -437,14 +442,20 @@ void calculateMotorSpeeds () {
   if(!cruiseControl){
       leftDriveSpeed = Math.round(abs(yJoy) * 255);
       rightDriveSpeed = Math.round(abs(yJoy) * 255);
+      if(yJoy * -1 > 0.15)
+        driveMode = 1;
+      else if(yJoy * -1 < -0.15)
+        driveMode = 2;
       if(xJoy * -1 >= 0.15){
+        driveMode = 3;
         leftDriveSpeed -= Math.round(abs(xJoy) * 255);
         rightDriveSpeed += Math.round(abs(xJoy) * 255);
         if(leftDriveSpeed < 0)
           leftDriveSpeed = 0;
         else if(rightDriveSpeed > 255)
           rightDriveSpeed = 255;
-      }else if(xJoy * -1 <= -0.15 ){
+      }else if(xJoy * -1 <= -0.15){
+        driveMode = 4;
         leftDriveSpeed += Math.round(abs(xJoy) * 255);
         rightDriveSpeed -= Math.round(abs(xJoy) * 255);
         if(leftDriveSpeed > 255)
@@ -469,6 +480,7 @@ void virtualControl(){
       shovelServoAngle = int(data[2]);
       visionPanAngle = int(data[3]);
       visionTiltAngle = int(data[4]);
+      driveMode = int(data[7]);
     }
     else{
       connectionStatus = true;
