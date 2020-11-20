@@ -481,6 +481,7 @@ void virtualControl(){
       visionPanAngle = int(data[3]);
       visionTiltAngle = int(data[4]);
       driveMode = int(data[7]);
+      avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/ 2;
     }
     else{
       connectionStatus = true;
