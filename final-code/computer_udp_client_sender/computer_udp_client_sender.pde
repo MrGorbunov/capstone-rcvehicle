@@ -122,7 +122,7 @@ boolean connectionStatus;
 
 void setup() {
   // Establishes the Serial Communication Connection
-  myPort  =  new Serial (this, "COM4",  9600);
+  myPort  =  new Serial (this, "COM5",  9600);
   myPort.bufferUntil( '\n' );
 
   // Initial call sets up the screen
@@ -484,7 +484,7 @@ void virtualControl(){
     }
     else{
       connectionStatus = true;
-      String msgSend = Integer.toString(leftDriveSpeed) + ' ' + Integer.toString(rightDriveSpeed) + ' ' + Integer.toString(shovelServoAngle) + ' ' + Float.toString(visionPanAngle) + ' '+ Float.toString(visionTiltAngle) + ' ' + "b" + ' ' + "c" + "\n";
+      String msgSend = Integer.toString(leftDriveSpeed) + ' ' + Integer.toString(rightDriveSpeed) + ' ' + Integer.toString(shovelServoAngle) + ' ' + Float.toString(visionPanAngle) + ' '+ Float.toString(visionTiltAngle) + ' ' + "b" + ' ' + "c" + ' ' + Integer.toString(driveMode) + "\n";
       remoteControl.write(msgSend);
     }
   }
