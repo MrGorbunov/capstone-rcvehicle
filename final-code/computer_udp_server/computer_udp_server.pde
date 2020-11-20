@@ -16,6 +16,7 @@ String leftDriveSpeed;   // 0-255S
 String rightDriveSpeed;  // 0-255
 String shovelServoAngle; // 0-360
 String avrMotor;
+String driveMode;
 // Pan is side to side, tilt is up & down
 String visionPanAngle;   // 0-180
 String visionTiltAngle;  // 0-180
@@ -54,6 +55,7 @@ void readIncomingTraffic () {
         visionPanAngle = recievedVals[3];
         visionTiltAngle = recievedVals[4];
         sender = recievedVals[5];
+        driveMode = recievedVals[7];
       }
     }
     catch(Exception e){
@@ -68,11 +70,11 @@ void sendValue(){
   if(leftDriveSpeed != null){
     String msgSend;
     if(sender.equals("a")){
-      msgSend = leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + ' ' + "b" + ' ' + "" + "\n";
+      msgSend = leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + ' ' + "b" + ' ' + "" + ' ' + driveMode +"\n";
       virtualControl.write(msgSend);
     }
     else{
-      msgSend = leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + ' ' + "a" + ' ' + "" + "\n";
+      msgSend = leftDriveSpeed + ' ' + rightDriveSpeed + ' ' + shovelServoAngle + ' ' + visionPanAngle + ' '+ visionTiltAngle + ' ' + "a" + ' ' + "" + ' ' + driveMode +"\n";
       virtualControl.write(msgSend);
     }
   }

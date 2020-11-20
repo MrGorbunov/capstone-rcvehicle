@@ -57,6 +57,7 @@ Knob pickupKnob;
 Slider mirrorPanSlider;
 Slider mirrorTiltSlider;
 Toggle virtualControlToggle;
+Textarea driveModeTextArea;
 
 SoundFile BOOTUP;         // Sounds get loaded in setup
 SoundFile GOINGFORWARD;   
@@ -92,6 +93,7 @@ double joyMagnitude = 0;
 boolean spinningInPlace = false;
 boolean reverseDirection = false;
 boolean cruiseControl = false;
+int driveMode = 5;
 
 // Actual motor speeds
 // _these get sent wirelessly to the esp_
@@ -210,6 +212,13 @@ void initalizeGui() {
      .setMode(ControlP5.SWITCH)
      .moveTo(g3)
      ;
+     
+  // Shows Drive Direction
+  driveModeTextArea = cp5.addTextarea("Drive Mode")
+    .setPosition(135, 70)
+    .setSize(130, 20)
+    .moveTo(g3)
+    ;
     
   // Shows the value of the Right Motor
   rightMotorKnob = cp5.addKnob("Right Motor Speed")
@@ -288,6 +297,14 @@ void updateGui(){
   mirrorPanSlider.setValue(visionPanAngle);
   mirrorTiltSlider.setValue(visionTiltAngle);
   virtualControl = virtualControlToggle.getValue();
+  if(driveMode == 1)
+    driveModeTextArea.setColorBackground(color(0,255,0));
+  else if(driveMode == 2)
+    driveModeTextArea.setColorBackground(color(255,0, 0));
+  else if(driveMode == 3)
+    driveModeTextArea.setColorBackground(color(0,100, 200));
+  else 
+    driveModeTextArea.setColorBackground(color(255,165,0));
 }
 
 
@@ -450,7 +467,12 @@ void calculateMotorSpeeds () {
   if(!cruiseControl){
       leftDriveSpeed = Math.round(abs(yJoy) * 255);
       rightDriveSpeed = Math.round(abs(yJoy) * 255);
+      if(yJoy * -1 > 0.15)
+        driveMode = 1;
+      else if(yJoy * -1 < -0.15)
+        driveMode = 2;
       if(xJoy * -1 >= 0.15){
+        driveMode = 3;
         leftDriveSpeed -= Math.round(abs(xJoy) * 255);
         rightDriveSpeed += Math.round(abs(xJoy) * 255);
         if(leftDriveSpeed < 0)
@@ -458,6 +480,7 @@ void calculateMotorSpeeds () {
         else if(rightDriveSpeed > 255)
           rightDriveSpeed = 255;
       }else if(xJoy * -1 <= -0.15){
+        driveMode = 4;
         leftDriveSpeed += Math.round(abs(xJoy) * 255);
         rightDriveSpeed -= Math.round(abs(xJoy) * 255);
         if(leftDriveSpeed > 255)
@@ -486,10 +509,11 @@ void virtualControl(){
         visionPanAngle = int(data[3]);
         visionTiltAngle = int(data[4]);
         avrMotor = (abs(leftDriveSpeed) + abs(rightDriveSpeed))/2;
+        driveMode = int(data[7]);
       }
     }
   }else{
-    String msgSend = Integer.toString(leftDriveSpeed) + ' ' + Integer.toString(rightDriveSpeed) + ' ' + Integer.toString(shovelServoAngle) + ' ' + Float.toString(visionPanAngle) + ' '+ Float.toString(visionTiltAngle) + ' ' + "a" + ' ' + "c" + "\n";
+    String msgSend = Integer.toString(leftDriveSpeed) + ' ' + Integer.toString(rightDriveSpeed) + ' ' + Integer.toString(shovelServoAngle) + ' ' + Float.toString(visionPanAngle) + ' '+ Float.toString(visionTiltAngle) + ' ' + "a" + ' ' + "c" + ' ' + Integer.toString(driveMode) + "\n";
     remoteControl.write(msgSend);
    }
 }
