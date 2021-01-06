@@ -1,0 +1,11 @@
+Wireless Robot Xbox Controls
+YAXIS1	Forward Reverse	3	SLIDER	Y Axis	0	1.0	0.0
+XAXIS2	Left Right	3	SLIDER	X Rotation	0	1.0	0.0
+TRIGGERS	Pickup Mechanism	3	SLIDER	Z Axis	0	1.0	0.0
+ABUTTON	TBD	1	BUTTON	Button 0	0	0.0	0.0
+YBUTTON	TBD	1	BUTTON	Button 3	0	0.0	0.0
+BBUTTON	TBD	1	BUTTON	Button 1	0	0.0	0.0
+XBUTTON	TBD	1	BUTTON	Button 2	0	0.0	0.0
+LBUMPER	TBD	1	BUTTON	Button 4	0	0.0	0.0
+RBUMPER	TBD	1	BUTTON	Button 5	0	0.0	0.0
+MIRRORANGLE	Change Mirror Angle	2	HAT	cooliehat: Hat Switch	0	1.0	0.0
