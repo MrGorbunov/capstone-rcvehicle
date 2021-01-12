@@ -1,6 +1,30 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
+#include <Servo.h>
 #include <math.h>
+
+
+// TODO: Add easing to this (esp) and take it off the controller (processing client)
+
+
+//
+// Hardware constants
+// Storing with variables was being weird :(
+#define PIN_VISION_PAN D2
+#define PIN_VISION_TILT D1
+#define PIN_SHOVEL_MASTER D3
+#define PIN_SHOVEL_SLAVE CompilationErrorMakeSureToSetShovelServoSlave
+
+#define PIN_MOTOR_LEFT_POS D5
+#define PIN_MOTOR_LEFT_NEG D6
+#define PIN_MOTOR_RIGHT_POS D7
+#define PIN_MOTOR_RIGHT_NEG D8
+
+// Servo shovelServo_master;
+// Servo shovelServo_slave;
+Servo visionServo_tilt;
+Servo visionServo_pan;
+
 
 //
 // Network Values
@@ -16,13 +40,14 @@ const int UDP_PORT = 6969;
 
 char packetBuffer[UDP_TX_PACKET_MAX_SIZE];
 
+
 //
 // Motor Values
 int leftDriveSpeed = 0;   // Even though these are ints,
 int rightDriveSpeed = 0;  // The values should all be very low
 int shovelServoAngle = 0; // 0-180 for angles, and -255 to 255 for drives
-int visionPanAngle = 0;   
-int visionTiltAngle = 0;  
+int visionPanAngle = 90;   
+int visionTiltAngle = 60;  
 
 
 //
@@ -48,12 +73,14 @@ void setup() {
 
   //
   // Hardware Setup
-  pinMode(D1, OUTPUT); // Shovel Servo
-  pinMode(D2, OUTPUT); // Vision Pan
-  pinMode(D3, OUTPUT); // Vision Tilt
+  // pinMode(PIN_SHOVEL_MASTER, OUTPUT); // Shovel Servo
+  pinMode(PIN_VISION_PAN, OUTPUT); // Vision Pan
+  pinMode(PIN_VISION_TILT, OUTPUT); // Vision Tilt
 
-  pinMode(D5, OUTPUT); // DC Motor Data
-  pinMode(D7, OUTPUT);
+  visionServo_tilt.attach(PIN_VISION_TILT);
+  visionServo_pan.attach(PIN_VISION_PAN);
+
+  // TODO: Motor Control
 
   Serial.print("Pins Configured");
   delay(100);
@@ -88,7 +115,7 @@ void loop() {
 
   activeBlinkCycle++;
   LEDOutput(blink);
-
+  updateMotorOutput();
 
   // If no new packet, terminate loop
   if (!readPacket())
@@ -151,6 +178,11 @@ bool readPacket() {
 // Hardware Output
 //
 
+void updateMotorOutput () {
+  visionServo_tilt.write(visionTiltAngle);
+  visionServo_pan.write(visionPanAngle);
+}
+
 void LEDOutput (bool blink) {
   // if blink, then negative motor speeds should be off
   int leftDrivePWM = pwmLogVal((int) abs(leftDriveSpeed));
@@ -162,14 +194,10 @@ void LEDOutput (bool blink) {
       rightDrivePWM = 0;
   }
 
-  analogWrite(D5, leftDrivePWM);
-  analogWrite(D7, rightDrivePWM);
-
 
   // Servo Output
-  analogWrite(D1, pwmLogVal(scaledAngle(shovelServoAngle)));
-  analogWrite(D2, pwmLogVal(scaledAngle(visionPanAngle)));
-  analogWrite(D3, pwmLogVal(scaledAngle(visionTiltAngle)));
+  analogWrite(PIN_VISION_PAN, pwmLogVal(scaledAngle(visionPanAngle)));
+  analogWrite(PIN_VISION_TILT, pwmLogVal(scaledAngle(visionTiltAngle)));
 
 }
 
